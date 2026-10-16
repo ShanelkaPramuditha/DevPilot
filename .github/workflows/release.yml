@@ -1,6 +1,6 @@
 # Publishes a GitHub Release when a version tag is pushed:
 #
-#   git tag v1.2.0
+#   git tag -a v1.2.0 -m "DevPilot 1.2.0"
 #   git push origin v1.2.0
 #
 # Tags with a suffix (v1.3.0-beta.1) are published as pre-releases.

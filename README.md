@@ -41,6 +41,7 @@ DevPilot.sln
 Directory.Build.props        Settings shared by both projects (framework, version, analyzers)
 dotnet-tools.json            Local .NET tools (Husky.Net for the git hooks)
 global.json                  Pins the .NET SDK version
+RELEASING.md                 How to version and publish a release
 .husky/                      Git hooks: pre-commit (format, lint, build) and pre-push (tests)
 installer/                   Inno Setup script for the Windows installer
 .github/                     CI and release workflows, release-note categories, Dependabot
@@ -96,10 +97,10 @@ Put the page's code in a new partial file such as `Views/MainWindow.Tools.cs`, a
 | `.github/workflows/ci.yml` | Every push to `main` and every pull request | Builds, runs the tests, then builds the x64 and ARM64 installers (attached to the run for 14 days) |
 | `.github/workflows/release.yml` | Pushing a `v*.*.*` tag | Tests, builds the installers and portable zips for x64 and ARM64, and publishes a GitHub Release |
 
-**To release a version:**
+**To release a version** (full guide, version rules and checklists: [RELEASING.md](RELEASING.md)):
 
 ```powershell
-git tag v1.2.0
+git tag -a v1.2.0 -m "DevPilot 1.2.0"
 git push origin v1.2.0
 ```
 
