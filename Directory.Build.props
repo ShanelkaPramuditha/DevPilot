@@ -32,5 +32,11 @@
     <VersionPrefix>1.0.0</VersionPrefix>
     <!-- Show "1.2.0" instead of "1.2.0+<commit hash>" in file properties. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!--
+      GitHub repository the in-app update check reads releases from, for example
+      https://github.com/<user>/DevPilot. The CI and release workflows set it automatically;
+      set it here too if local builds should check for updates.
+    -->
+    <RepositoryUrl></RepositoryUrl>
   </PropertyGroup>
 </Project>

@@ -386,9 +386,34 @@
         <Grid Grid.Column="1" Margin="24,14,20,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
+
+            <!-- Shown when a newer DevPilot is available (Views/MainWindow.Updates.cs) -->
+            <Border
+                x:Name="UpdateBanner"
+                Grid.Row="1"
+                Margin="0,0,0,14"
+                Padding="14,10"
+                CornerRadius="6"
+                Background="{DynamicResource Brush.NoteBackground}"
+                BorderBrush="{DynamicResource Brush.NoteStroke}"
+                BorderThickness="1"
+                Visibility="Collapsed">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="See What's New" Style="{StaticResource AccentButton}" Margin="12,0,8,0" Click="UpdateBannerOpen_Click"/>
+                        <Button Style="{StaticResource NavIconButton}" Width="32" Height="32" ToolTip="Dismiss" AutomationProperties.Name="Dismiss" Click="UpdateBannerDismiss_Click">
+                            <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
+                               Foreground="{DynamicResource Brush.Accent}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <TextBlock x:Name="UpdateBannerText" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                </DockPanel>
+            </Border>
 
             <!-- Page title and the "more" menu -->
             <DockPanel x:Name="HeaderPanel" Grid.Row="0" Margin="0,0,0,14">
@@ -421,6 +446,9 @@
                                 <MenuItem x:Name="ThemeDarkItem" Header="_Dark" IsCheckable="True" Tag="Dark" Click="Theme_Click"/>
                             </MenuItem>
                             <MenuItem Header="_Keyboard Shortcuts" Click="Shortcuts_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Check for _Updates..." Click="CheckForUpdates_Click"/>
+                            <MenuItem Header="_About DevPilot" Click="About_Click"/>
                         </ContextMenu>
                     </Button.ContextMenu>
                 </Button>
@@ -439,7 +467,7 @@
                 </StackPanel>
             </DockPanel>
 
-            <TabControl x:Name="DistroTabs" Grid.Row="1" Style="{StaticResource PageHost}" SelectionChanged="DistroTabs_SelectionChanged">
+            <TabControl x:Name="DistroTabs" Grid.Row="2" Style="{StaticResource PageHost}" SelectionChanged="DistroTabs_SelectionChanged">
                 <!-- Pages: each TabItem is one sidebar entry (see Page.cs) -->
                 <TabItem x:Name="InstalledTab" Header="Installed"
                          nav:PageInfo.Glyph="&#xE756;"
@@ -880,7 +908,7 @@
             </TabControl>
 
             <!-- Busy indicator -->
-            <DockPanel Grid.Row="2" Margin="0,8,0,0">
+            <DockPanel Grid.Row="3" Margin="0,8,0,0">
                 <ProgressBar
                     x:Name="BusyProgress"
                     DockPanel.Dock="Right"

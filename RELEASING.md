@@ -36,6 +36,22 @@ Always put a dot before the number (`beta.1`, not `beta1`) so `beta.10` sorts af
 | `v1.3.0-beta.1` | Pre-release |
 | `1.2.0`, `v1.2`, `v1.2.0.1`, `release-1.2` | Rejected: the workflow fails with an explanation |
 
+## How the app updates itself
+
+DevPilot checks this repository's GitHub Releases (at startup, at most every 12 hours, and from
+**⋯ → Check for Updates**). When a newer version exists it downloads
+`DevPilot-<version>-win-<arch>-setup.exe`, verifies it against `SHA256SUMS.txt` from the same
+release, and runs it silently. The installer then restarts DevPilot.
+
+This relies on what the release workflow publishes, so keep these unchanged:
+
+- the installer file names (`DevPilot-<version>-win-x64-setup.exe`, `...-win-arm64-setup.exe`);
+- `SHA256SUMS.txt` in every release (without it the app refuses to install the update);
+- the installer `AppId` in `installer/DevPilot.iss`.
+
+Users on a stable version are offered stable releases only; pre-releases are offered to users who
+opt in, or who already run a pre-release.
+
 ## Before releasing
 
 - [ ] Everything for the release is merged into `main`, and **CI passed** on the last commit.

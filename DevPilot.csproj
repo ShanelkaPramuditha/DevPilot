@@ -27,12 +27,15 @@
     <Compile Update="Views\MainWindow.DistroActions.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Shell.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Sidebar.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Updates.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Usage.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.WslLifecycle.cs" DependentUpon="MainWindow.xaml" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="DevPilot.Tests" />
+    <!-- Read by Services/Updates/UpdateService.cs -->
+    <AssemblyMetadata Include="RepositoryUrl" Value="$(RepositoryUrl)" />
   </ItemGroup>
 
   <!--

@@ -112,6 +112,7 @@ jobs:
           -p:PublishReadyToRun=true
           -p:VersionPrefix=${{ needs.version.outputs.prefix }}
           -p:VersionSuffix=${{ needs.version.outputs.suffix }}
+          -p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }}
           --output artifacts/publish/${{ matrix.arch }}
 
       - name: Create portable zip

@@ -86,5 +86,15 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; In-app updates run the setup silently with /LAUNCH: start DevPilot again afterwards,
+; as the signed-in user even when the update needed admin rights.
+Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: LaunchAfterUpdate
 
 ; User preferences in %LocalAppData%\DevPilot are kept on uninstall, like most apps.
+
+[Code]
+// True when DevPilot started this setup to update itself (see Services/Updates/UpdateService.cs).
+function LaunchAfterUpdate: Boolean;
+begin
+  Result := WizardSilent and (Pos('/LAUNCH', Uppercase(GetCmdTail)) > 0);
+end;

@@ -83,6 +83,7 @@ jobs:
           --runtime win-${{ matrix.arch }} --self-contained true
           -p:PublishReadyToRun=true
           -p:VersionPrefix=0.0.0 -p:VersionSuffix=ci.${{ github.run_number }}
+          -p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }}
           --output artifacts/publish/${{ matrix.arch }}
 
       - name: Install Inno Setup

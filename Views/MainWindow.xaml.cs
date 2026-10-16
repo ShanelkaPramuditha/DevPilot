@@ -45,6 +45,7 @@ public partial class MainWindow : Window
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         await RunBusyAsync("Checking WSL...", RefreshAllAsync);
+        await CheckForUpdatesInBackgroundAsync();
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e)

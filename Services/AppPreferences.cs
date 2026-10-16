@@ -19,6 +19,17 @@ public sealed class AppPreferences
 
     public bool SidebarCollapsed { get; set; }
 
+    /// <summary>Check GitHub for a newer version when DevPilot starts (at most every few hours).</summary>
+    public bool CheckForUpdatesAutomatically { get; set; } = true;
+
+    /// <summary>Also offer pre-releases (beta, rc). Always on while a pre-release is installed.</summary>
+    public bool IncludePreReleases { get; set; }
+
+    public DateTimeOffset? LastUpdateCheck { get; set; }
+
+    /// <summary>A version the user chose to skip; automatic checks do not offer it again.</summary>
+    public string? SkippedVersion { get; set; }
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
