@@ -1,0 +1,66 @@
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+# Braces and namespaces
+csharp_prefer_braces = true:warning
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# C# conventions
+csharp_using_directive_placement = outside_namespace
+dotnet_sort_system_directives_first = true
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+
+# Prefer modern C# syntax
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Simplify code
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_readonly_field = true:suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+
+[*.xaml]
+indent_style = space
+indent_size = 4
+```
+
+These are sensible defaults for a modern C# project. EditorConfig controls code conventions, while the VS Code settings control editor behavior. <Cite refs={["turn292650search0","turn292650search2"]}/>
+
+## 4. Format the entire project
+
+Formatting on save only handles files you save. To format all supported files in the project, run this from the terminal:
+
+```powershell
+dotnet format
+```
+
+To check formatting without modifying files:
+
+```powershell
+dotnet format --verify-no-changes
+```
+
+You can also enable code-style diagnostics during builds by adding this property to your `.csproj`:
+
+```xml
+<PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+</PropertyGroup>
+```
+
+This enables applicable .NET code-style rules during builds, based on their configured severities. <Cite refs={["turn292650search1","turn292650search7"]}/>
+
+**My recommendation:** Commit `.editorconfig` and `.vscode/settings.json` to Git. That way, your formatting and editor defaults travel with the project, while your personal VS Code settings remain separate.
