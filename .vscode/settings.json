@@ -16,5 +16,5 @@
         "editor.tabSize": 4,
         "editor.insertSpaces": true
     },
-    "dotnet.defaultSolution": "DevModeManager.sln"
+    "dotnet.defaultSolution": "DevPilot.sln"
 }

@@ -1,4 +1,3 @@
-
 root = true
 
 [*]
@@ -32,35 +31,14 @@ dotnet_style_collection_initializer = true:suggestion
 dotnet_style_readonly_field = true:suggestion
 dotnet_style_prefer_auto_properties = true:suggestion
 
+# Project structure: namespaces follow the folder layout (Services/Wsl -> DevPilot.Services.Wsl)
+dotnet_style_namespace_match_folder = true:warning
+dotnet_diagnostic.IDE0130.severity = warning
+
 [*.xaml]
 indent_style = space
 indent_size = 4
-```
 
-These are sensible defaults for a modern C# project. EditorConfig controls code conventions, while the VS Code settings control editor behavior. <Cite refs={["turn292650search0","turn292650search2"]}/>
-
-## 4. Format the entire project
-
-Formatting on save only handles files you save. To format all supported files in the project, run this from the terminal:
-
-```powershell
-dotnet format
-```
-
-To check formatting without modifying files:
-
-```powershell
-dotnet format --verify-no-changes
-```
-
-You can also enable code-style diagnostics during builds by adding this property to your `.csproj`:
-
-```xml
-<PropertyGroup>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-</PropertyGroup>
-```
-
-This enables applicable .NET code-style rules during builds, based on their configured severities. <Cite refs={["turn292650search1","turn292650search7"]}/>
-
-**My recommendation:** Commit `.editorconfig` and `.vscode/settings.json` to Git. That way, your formatting and editor defaults travel with the project, while your personal VS Code settings remain separate.
+[*.{csproj,props,targets,sln,xml}]
+indent_style = space
+indent_size = 2

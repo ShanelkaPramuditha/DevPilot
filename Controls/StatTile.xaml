@@ -1,0 +1,64 @@
+<UserControl x:Class="DevPilot.Controls.StatTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Margin="0,0,10,10">
+    <Border
+        Background="{DynamicResource Brush.Card}"
+        BorderBrush="{DynamicResource Brush.CardStroke}"
+        BorderThickness="1"
+        CornerRadius="6"
+        Padding="14,12">
+        <StackPanel>
+            <TextBlock x:Name="LabelText" Foreground="{DynamicResource Brush.TextSecondary}"/>
+            <DockPanel Margin="0,4,0,0">
+                <TextBlock
+                    x:Name="StatusText"
+                    DockPanel.Dock="Right"
+                    VerticalAlignment="Center"
+                    FontWeight="SemiBold"
+                    Visibility="Collapsed"/>
+                <TextBlock
+                    x:Name="ValueText"
+                    Text="—"
+                    FontSize="24"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource Brush.TextPrimary}"/>
+            </DockPanel>
+            <TextBlock
+                x:Name="DetailText"
+                Foreground="{DynamicResource Brush.TextSecondary}"
+                TextTrimming="CharacterEllipsis"
+                Margin="0,2,0,0"/>
+
+            <!-- Meter: the fill carries severity, the track is a lighter step of the accent. -->
+            <Grid x:Name="Meter" Height="6" Margin="0,10,0,0" Visibility="Collapsed">
+                <Border Background="{DynamicResource Brush.AccentTrack}" CornerRadius="3"/>
+                <Border x:Name="MeterFill" Background="{DynamicResource Brush.Accent}" CornerRadius="3" HorizontalAlignment="Left" Width="0"/>
+            </Grid>
+
+            <!-- Trend over the recent samples (single series, so no legend). -->
+            <Canvas
+                x:Name="Sparkline"
+                Height="34"
+                Margin="0,10,0,0"
+                Background="Transparent"
+                ClipToBounds="True"
+                Visibility="Collapsed"
+                SizeChanged="Sparkline_SizeChanged">
+                <Polyline
+                    x:Name="SparklineLine"
+                    Stroke="{DynamicResource Brush.Accent}"
+                    StrokeThickness="2"
+                    StrokeLineJoin="Round"/>
+                <Ellipse
+                    x:Name="SparklineDot"
+                    Width="8"
+                    Height="8"
+                    Fill="{DynamicResource Brush.Accent}"
+                    Stroke="{DynamicResource Brush.Card}"
+                    StrokeThickness="2"
+                    Visibility="Collapsed"/>
+            </Canvas>
+        </StackPanel>
+    </Border>
+</UserControl>

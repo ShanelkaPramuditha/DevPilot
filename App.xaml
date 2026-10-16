@@ -1,8 +1,8 @@
-﻿<Application x:Class="DevModeManager.App"
+<Application x:Class="DevPilot.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:DevModeManager"
-             StartupUri="MainWindow.xaml">
+             xmlns:local="clr-namespace:DevPilot"
+             StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
          
     </Application.Resources>

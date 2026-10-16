@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "watch",
+            "detail": "Run DevPilot and rebuild/restart when files change",
+            "type": "process",
+            "command": "dotnet",
+            "args": ["watch"],
+            "isBackground": true,
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build",
+            "type": "process",
+            "command": "dotnet",
+            "args": ["build", "DevPilot.sln"],
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "type": "process",
+            "command": "dotnet",
+            "args": ["test", "DevPilot.sln"],
+            "group": { "kind": "test", "isDefault": true },
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

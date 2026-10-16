@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Shared settings (target framework, version, authors) are in Directory.Build.props. -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>DevPilot</AssemblyName>
+    <RootNamespace>DevPilot</RootNamespace>
+    <AssemblyTitle>DevPilot</AssemblyTitle>
+    <Description>Manage WSL distributions and developer tools on Windows.</Description>
+    <ApplicationIcon>Assets\DevPilot.ico</ApplicationIcon>
+
+    <!-- The project sits at the repository root (so `dotnet run` / `dotnet watch` work there);
+         keep the test project's files out of the app. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Window icon and the logo shown in the sidebar -->
+    <Resource Include="Assets\DevPilot.ico" />
+    <Resource Include="Assets\DevPilot.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Show the MainWindow partial classes under MainWindow.xaml in Solution Explorer -->
+    <Compile Update="Views\MainWindow.Catalog.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.DistroActions.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Shell.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Sidebar.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Usage.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.WslLifecycle.cs" DependentUpon="MainWindow.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DevPilot.Tests" />
+  </ItemGroup>
+
+</Project>
