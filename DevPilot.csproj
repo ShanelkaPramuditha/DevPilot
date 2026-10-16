@@ -11,8 +11,8 @@
     <ApplicationIcon>Assets\DevPilot.ico</ApplicationIcon>
 
     <!-- The project sits at the repository root (so `dotnet run` / `dotnet watch` work there);
-         keep the test project's files out of the app. -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**</DefaultItemExcludes>
+         keep the tests, installer script and build output out of the app. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;installer\**;artifacts\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

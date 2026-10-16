@@ -1,0 +1,108 @@
+# Builds and tests every push to main and every pull request, then builds the
+# installers for each architecture the release workflow ships.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore DevPilot.sln
+
+      - name: Build
+        run: dotnet build DevPilot.sln --configuration Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test DevPilot.sln --configuration Release --no-build
+          --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: ignore
+
+  # Builds the same installers as a release (versioned 0.0.0-ci.<run>), so problems
+  # with publishing or the installer script show up before tagging. The installers
+  # are attached to the workflow run for testing.
+  package-check:
+    name: Package check (${{ matrix.arch }})
+    needs: build-and-test
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+    env:
+      VERSION: 0.0.0-ci.${{ github.run_number }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        run: >
+          dotnet publish DevPilot.csproj --configuration Release
+          --runtime win-${{ matrix.arch }} --self-contained true
+          -p:PublishReadyToRun=true
+          -p:VersionPrefix=0.0.0 -p:VersionSuffix=ci.${{ github.run_number }}
+          --output artifacts/publish/${{ matrix.arch }}
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+          }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup was not installed" }
+          "ISCC=$iscc" >> $env:GITHUB_ENV
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & $env:ISCC `
+            "/DAppVersion=$env:VERSION" `
+            "/DNumericVersion=0.0.0" `
+            "/DArch=$env:ARCH" `
+            "/DSourceDir=$env:GITHUB_WORKSPACE\artifacts\publish\$env:ARCH" `
+            "/DOutputDir=$env:GITHUB_WORKSPACE\artifacts" `
+            installer\DevPilot.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devpilot-ci-${{ matrix.arch }}
+          path: artifacts/*-setup.exe
+          retention-days: 14
+          if-no-files-found: error

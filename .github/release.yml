@@ -1,0 +1,20 @@
+# Groups the automatically generated release notes by pull request label.
+# Label a pull request before merging it so it lands in the right section;
+# label it "skip-changelog" to leave it out.
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: New features
+      labels: [feature, enhancement]
+    - title: Bug fixes
+      labels: [bug, fix]
+    - title: User interface
+      labels: [ui, design]
+    - title: Dependencies
+      labels: [dependencies]
+    - title: Maintenance
+      labels: [maintenance, chore, refactor, ci, docs, tests]
+    - title: Other changes
+      labels: ["*"]

@@ -19,3 +19,6 @@ obj/
 
 # Test results
 TestResults/
+
+# Release build output (publish folders, installers, zips)
+artifacts/

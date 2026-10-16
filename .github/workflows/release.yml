@@ -1,0 +1,216 @@
+# Publishes a GitHub Release when a version tag is pushed:
+#
+#   git tag v1.2.0
+#   git push origin v1.2.0
+#
+# Tags with a suffix (v1.3.0-beta.1) are published as pre-releases.
+# For each architecture the release contains a setup .exe and a portable .zip,
+# plus SHA256SUMS.txt and release notes generated from the merged pull requests
+# (grouped by label, see .github/release.yml).
+#
+# To rebuild an existing release, run this workflow manually with the tag.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and publish, for example v1.2.0
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  version:
+    name: Read version from tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.parse.outputs.tag }}
+      version: ${{ steps.parse.outputs.version }}
+      prefix: ${{ steps.parse.outputs.prefix }}
+      suffix: ${{ steps.parse.outputs.suffix }}
+      prerelease: ${{ steps.parse.outputs.prerelease }}
+    steps:
+      - id: parse
+        shell: bash
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          if [[ ! "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-([0-9A-Za-z.-]+))?$ ]]; then
+            echo "::error::'$TAG' is not a version tag. Use v1.2.3 or v1.2.3-beta.1."
+            exit 1
+          fi
+          prefix="${BASH_REMATCH[1]}"
+          suffix="${BASH_REMATCH[3]}"
+          {
+            echo "tag=$TAG"
+            echo "prefix=$prefix"
+            echo "suffix=$suffix"
+            echo "version=$prefix${suffix:+-$suffix}"
+            echo "prerelease=$([[ -n "$suffix" ]] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+          echo "Releasing version $prefix${suffix:+-$suffix} from $TAG"
+
+  test:
+    name: Build and test
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Test
+        run: >
+          dotnet test DevPilot.sln --configuration Release
+          -p:VersionPrefix=${{ needs.version.outputs.prefix }}
+          -p:VersionSuffix=${{ needs.version.outputs.suffix }}
+
+  build:
+    name: Package (${{ matrix.arch }})
+    needs: [version, test]
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: [x64, arm64]
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # Self-contained: users do not need to install .NET.
+      - name: Publish
+        run: >
+          dotnet publish DevPilot.csproj --configuration Release
+          --runtime win-${{ matrix.arch }} --self-contained true
+          -p:PublishReadyToRun=true
+          -p:VersionPrefix=${{ needs.version.outputs.prefix }}
+          -p:VersionSuffix=${{ needs.version.outputs.suffix }}
+          --output artifacts/publish/${{ matrix.arch }}
+
+      - name: Create portable zip
+        shell: pwsh
+        run: |
+          $zip = "artifacts/DevPilot-$env:VERSION-win-$env:ARCH-portable.zip"
+          Compress-Archive -Path "artifacts/publish/$env:ARCH/*" -DestinationPath $zip -CompressionLevel Optimal
+          Get-Item $zip | Format-Table Name, Length
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+          }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup was not installed" }
+          "ISCC=$iscc" >> $env:GITHUB_ENV
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & $env:ISCC `
+            "/DAppVersion=$env:VERSION" `
+            "/DNumericVersion=${{ needs.version.outputs.prefix }}" `
+            "/DArch=$env:ARCH" `
+            "/DSourceDir=$env:GITHUB_WORKSPACE\artifacts\publish\$env:ARCH" `
+            "/DOutputDir=$env:GITHUB_WORKSPACE\artifacts" `
+            installer\DevPilot.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devpilot-${{ matrix.arch }}
+          path: |
+            artifacts/*-setup.exe
+            artifacts/*-portable.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.version.outputs.tag }}
+      VERSION: ${{ needs.version.outputs.version }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: devpilot-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create checksums
+        working-directory: dist
+        run: |
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Write release notes
+        shell: bash
+        run: |
+          base="https://github.com/$GH_REPO/releases/download/$TAG"
+          file() { echo "[$1]($base/$1)"; }
+
+          # Notes for the merged pull requests since the previous release, grouped by label.
+          changes="$(gh api "repos/$GH_REPO/releases/generate-notes" -f tag_name="$TAG" --jq .body)"
+
+          cat > notes.md <<EOF
+          ## Download
+
+          | Your PC | Installer (recommended) | Portable, no install |
+          |---|---|---|
+          | Windows 10/11 on Intel or AMD — most PCs | $(file "DevPilot-$VERSION-win-x64-setup.exe") | $(file "DevPilot-$VERSION-win-x64-portable.zip") |
+          | Windows 11 on ARM (Snapdragon, Surface Pro X, ...) | $(file "DevPilot-$VERSION-win-arm64-setup.exe") | $(file "DevPilot-$VERSION-win-arm64-portable.zip") |
+
+          Not sure which one? Open **Settings → System → About** and check **System type**.
+
+          - **Requirements:** Windows 10 version 2004 (build 19041) or later, or Windows 11. Everything else is included; if WSL is missing, DevPilot can install it.
+          - **Installing:** the installer needs no admin rights and upgrades an existing installation. The portable zip runs from any folder.
+          - **Windows SmartScreen:** if Windows warns about an unrecognised app, choose **More info → Run anyway**.
+          - **Verify a download:** compare its SHA-256 hash (\`Get-FileHash <file>\`) with [SHA256SUMS.txt]($base/SHA256SUMS.txt).
+
+          $changes
+          EOF
+          cat notes.md
+
+      - name: Publish release
+        shell: bash
+        run: |
+          flags=()
+          [[ "$PRERELEASE" == "true" ]] && flags+=(--prerelease) || flags+=(--latest)
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            # Re-run: replace the files and notes of the existing release.
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --title "DevPilot $VERSION" --notes-file notes.md "${flags[@]}"
+          else
+            gh release create "$TAG" dist/* --verify-tag --title "DevPilot $VERSION" --notes-file notes.md "${flags[@]}"
+          fi

@@ -66,3 +66,29 @@ Pages are `TabItem`s inside `DistroTabs` in `Views/MainWindow.xaml`; the sidebar
 Put the page's code in a new partial file such as `Views/MainWindow.Tools.cs`, and add it to the
 `DependentUpon` list in `DevPilot.csproj` so it nests under `MainWindow.xaml`. Use
 `PageInfo.SetBadge(ToolsTab, "3")` to show a count in the sidebar. Glyphs are Segoe Fluent Icons code points.
+
+## Continuous integration and releases
+
+| Workflow | Runs on | Does |
+|---|---|---|
+| `.github/workflows/ci.yml` | Every push to `main` and every pull request | Builds, runs the tests, then builds the x64 and ARM64 installers (attached to the run for 14 days) |
+| `.github/workflows/release.yml` | Pushing a `v*.*.*` tag | Tests, builds the installers and portable zips for x64 and ARM64, and publishes a GitHub Release |
+
+**To release a version:**
+
+```powershell
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+- The version comes from the tag; there is nothing to edit in the code. `v1.3.0-beta.1` publishes a **pre-release**.
+- Each release contains, for x64 and ARM64: `DevPilot-<version>-win-<arch>-setup.exe` (installer) and
+  `DevPilot-<version>-win-<arch>-portable.zip`, plus `SHA256SUMS.txt`. Both are self-contained (no .NET install needed).
+- The release notes start with a "which file do I need" table, followed by the merged pull requests grouped by
+  label (`feature`, `bug`, `ui`, `dependencies`, `maintenance`...; see `.github/release.yml`). Label pull requests
+  before merging; `skip-changelog` leaves one out.
+- To rebuild a release, run the **Release** workflow manually (Actions tab) with the tag.
+
+The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) from `installer/DevPilot.iss`. It installs
+per user without admin rights (all users is optional), adds a Start menu entry and an uninstaller, and upgrades in place.
+Dependabot (`.github/dependabot.yml`) opens weekly pull requests for NuGet packages and GitHub Actions.
