@@ -7,6 +7,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!--
+    Code quality: every build runs the .NET analyzers and the code-style rules in .editorconfig.
+    Findings are warnings while you work; the git hooks and CI build with
+    -p:TreatWarningsAsErrors=true, so nothing with warnings gets committed or merged.
+  -->
+  <PropertyGroup>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Required for the unused-using rule (IDE0005) to run during builds; the XML file is not shipped. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PublishDocumentationFile>false</PublishDocumentationFile>
+    <PublishDocumentationFiles>false</PublishDocumentationFiles>
+    <!-- Missing or misplaced XML doc comments are not errors. -->
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS1587</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup>
     <Product>DevPilot</Product>
     <Authors>Shanelka Pramuditha</Authors>

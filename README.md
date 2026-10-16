@@ -17,11 +17,33 @@ dotnet test DevPilot.sln
 
 In VS Code the same commands are available as tasks (**Terminal → Run Task**: `watch`, `build`, `test`).
 
+## Code quality checks
+
+Every build runs the .NET analyzers and the code-style rules in `.editorconfig`. Git hooks
+([Husky.Net](https://alirezanet.github.io/Husky.Net/), configured in `.husky/task-runner.json`) enforce them:
+
+| When | What runs |
+|---|---|
+| `git commit` | Formats the staged `.cs` files with `dotnet format` and re-stages them, then builds the solution in Release with warnings as errors (compile errors, analyzer findings, code style) |
+| `git push` | Runs all tests |
+
+The hooks install themselves on the first build of a fresh clone (or run `dotnet tool restore` and `dotnet husky install`).
+CI runs the same checks, so nothing is skipped by committing without them.
+
+- Format everything by hand: `dotnet format DevPilot.sln`
+- Skip the hooks once (for example a work-in-progress commit): `git commit --no-verify`, `git push --no-verify`
+- Turn the hooks off on a machine: set the environment variable `HUSKY=0`
+
 ## Repository layout
 
 ```
 DevPilot.sln
-Directory.Build.props        Settings shared by both projects (framework, version, authors)
+Directory.Build.props        Settings shared by both projects (framework, version, analyzers)
+dotnet-tools.json            Local .NET tools (Husky.Net for the git hooks)
+global.json                  Pins the .NET SDK version
+.husky/                      Git hooks: pre-commit (format, lint, build) and pre-push (tests)
+installer/                   Inno Setup script for the Windows installer
+.github/                     CI and release workflows, release-note categories, Dependabot
 DevPilot.csproj              The application (its folders are below)
 App.xaml(.cs)                Startup: applies the theme, opens Views/MainWindow.xaml
 Assets/                      DevPilot.ico (app and window icon, 16–256 px) and DevPilot.png (512 px logo)

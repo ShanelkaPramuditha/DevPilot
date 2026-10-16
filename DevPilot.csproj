@@ -35,4 +35,16 @@
     <InternalsVisibleTo Include="DevPilot.Tests" />
   </ItemGroup>
 
+  <!--
+    Installs the git hooks in .husky (format, lint and build before commit, tests before push)
+    the first time a fresh clone is restored. Skipped in Release builds (CI and the hooks
+    themselves), outside a git checkout, and when the HUSKY environment variable is 0.
+  -->
+  <Target Name="InstallGitHooks" BeforeTargets="Restore;CollectPackageReferences"
+          Condition="'$(HUSKY)' != '0' And '$(Configuration)' != 'Release' And Exists('$(MSBuildProjectDirectory)\.git')">
+    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
+    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
 </Project>

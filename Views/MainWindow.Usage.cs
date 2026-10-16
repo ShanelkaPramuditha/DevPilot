@@ -368,7 +368,8 @@ public partial class MainWindow
         if (distros.Count == 0)
         {
             insights.Add((Severity.Info, "No distributions are installed yet.", "Browse Available",
-                () => { DistroTabs.SelectedItem = AvailableTab; return Task.CompletedTask; }));
+                () => { DistroTabs.SelectedItem = AvailableTab; return Task.CompletedTask; }
+            ));
         }
         else if (vm is null)
         {
@@ -441,7 +442,7 @@ public partial class MainWindow
         }
     }
 
-    private FrameworkElement CreateInsightRow(Severity severity, string text, string? action, Func<Task>? run)
+    private static DockPanel CreateInsightRow(Severity severity, string text, string? action, Func<Task>? run)
     {
         // An icon and a word carry the severity, never colour alone.
         var (glyph, brush, label) = severity switch

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -288,8 +289,8 @@ public partial class MainWindow : Window
 
     private void UpdateTabHeaders()
     {
-        PageInfo.SetBadge(InstalledTab, _installed.Count.ToString());
-        PageInfo.SetBadge(AvailableTab, _online.Count == 0 ? "" : _online.Count.ToString());
+        PageInfo.SetBadge(InstalledTab, _installed.Count.ToString(CultureInfo.CurrentCulture));
+        PageInfo.SetBadge(AvailableTab, _online.Count == 0 ? "" : _online.Count.ToString(CultureInfo.CurrentCulture));
     }
 
     private void ShowOnlinePlaceholder(string text)

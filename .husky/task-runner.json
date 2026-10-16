@@ -1,0 +1,38 @@
+{
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "format-staged",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": ["format", "DevPilot.sln", "--include", "${staged}"],
+      "include": ["**/*.cs"]
+    },
+    {
+      "name": "restage-formatted",
+      "group": "pre-commit",
+      "command": "git",
+      "args": ["add", "${staged}"],
+      "include": ["**/*.cs"]
+    },
+    {
+      "name": "build-and-lint",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": [
+        "build", "DevPilot.sln",
+        "--configuration", "Release",
+        "-p:TreatWarningsAsErrors=true",
+        "--nologo", "--verbosity", "quiet"
+      ],
+      "include": ["**/*.cs", "**/*.xaml", "**/*.csproj", "**/*.props", "**/.editorconfig", "global.json"],
+      "filteringRule": "staged"
+    },
+    {
+      "name": "test",
+      "group": "pre-push",
+      "command": "dotnet",
+      "args": ["test", "DevPilot.sln", "--configuration", "Release", "--nologo", "--verbosity", "quiet"]
+    }
+  ]
+}

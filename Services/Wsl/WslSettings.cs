@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Text;
 using DevPilot.Core;
@@ -78,7 +79,7 @@ public static class WslSettings
             new("Resource limits", "wsl2", "processors", "Processors",
                 "Number of logical processors the VM may use.",
                 SettingKind.Choice, $"all {cores}",
-                Enumerable.Range(1, cores).Select(n => n.ToString()).ToList()),
+                Enumerable.Range(1, cores).Select(n => n.ToString(CultureInfo.InvariantCulture)).ToList()),
             new("Resource limits", "wsl2", "swap", "Swap size",
                 "Size of the swap file, for example 2GB. 0 turns swap off.",
                 SettingKind.Size, "25% of memory"),

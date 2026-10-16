@@ -42,7 +42,7 @@ public partial class MainWindow
     }
 
     /// <summary>The user's choice; the window may still collapse it when narrow.</summary>
-    private bool PreferExpanded => !App.Preferences.SidebarCollapsed;
+    private static bool PreferExpanded => !App.Preferences.SidebarCollapsed;
 
     private void InitializeSidebar()
     {

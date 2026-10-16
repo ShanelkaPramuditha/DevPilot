@@ -35,6 +35,9 @@ dotnet_style_prefer_auto_properties = true:suggestion
 dotnet_style_namespace_match_folder = true:warning
 dotnet_diagnostic.IDE0130.severity = warning
 
+# Unused using directives
+dotnet_diagnostic.IDE0005.severity = warning
+
 [*.xaml]
 indent_style = space
 indent_size = 4
@@ -42,3 +45,7 @@ indent_size = 4
 [*.{csproj,props,targets,sln,xml}]
 indent_style = space
 indent_size = 2
+
+# Tests use Method_Scenario_Expected names
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none

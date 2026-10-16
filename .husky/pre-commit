@@ -1,0 +1,7 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Formats the staged C# files (and re-stages them), then builds with warnings as
+# errors to catch compile errors, analyzer findings and code-style problems.
+# Tasks are defined in .husky/task-runner.json. Skip once with: git commit --no-verify
+dotnet husky run --group pre-commit

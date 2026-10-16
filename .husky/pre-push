@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Runs the tests before anything leaves your machine.
+# Tasks are defined in .husky/task-runner.json. Skip once with: git push --no-verify
+dotnet husky run --group pre-push
