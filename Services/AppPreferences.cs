@@ -70,6 +70,12 @@ public sealed class AppPreferences
 
     public DateTimeOffset? LastUpdateCheck { get; set; }
 
+    /// <summary>
+    /// The newer version the last check found (null when up to date), so the next start shows
+    /// it again even when the next check is not due yet.
+    /// </summary>
+    public string? AvailableVersion { get; set; }
+
     /// <summary>A version the user chose to skip; automatic checks do not offer it again.</summary>
     public string? SkippedVersion { get; set; }
 

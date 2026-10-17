@@ -39,6 +39,7 @@ public partial class MainWindow : Window
         InitializeTools();
         InitializeRemote();
         InitializeTray();
+        InitializeUpdates();
         RestoreWindowSize();
     }
 

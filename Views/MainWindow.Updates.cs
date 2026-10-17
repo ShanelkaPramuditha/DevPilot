@@ -1,20 +1,36 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Windows;
+using System.Windows.Threading;
+using DevPilot.Core;
 using DevPilot.Models;
+using DevPilot.Navigation;
 using DevPilot.Services.Updates;
 using DevPilot.Views.Dialogs;
 
 namespace DevPilot.Views;
 
 /// <summary>
-/// Checking for a newer DevPilot: automatically at startup (a banner appears when one
-/// is available) and from "Check for Updates..." in the "more" menu.
+/// Checking for a newer DevPilot: automatically at startup and every few hours while it
+/// runs (a banner, and a notification when DevPilot is in the background), and from
+/// "Check for Updates..." in the "more" menu or on the Settings page.
 /// </summary>
 public partial class MainWindow
 {
     /// <summary>Automatic checks run at most this often.</summary>
     private static readonly TimeSpan AutomaticCheckInterval = TimeSpan.FromHours(12);
+
+    /// <summary>Wakes up hourly; a check runs when one is due, so DevPilot left running for days still finds updates.</summary>
+    private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromHours(1) };
+
+    /// <summary>The version the user was already told about, so the notification is not repeated.</summary>
+    private string? _notifiedVersion;
+
+    private void InitializeUpdates()
+    {
+        _updateTimer.Tick += async (_, _) => await CheckForUpdatesInBackgroundAsync();
+        _updateTimer.Start();
+    }
 
     private ReleaseInfo? _availableUpdate;
 
@@ -27,8 +43,16 @@ public partial class MainWindow
     private async Task CheckForUpdatesInBackgroundAsync()
     {
         var preferences = App.Preferences;
-        if (!UpdateService.IsConfigured || !preferences.CheckForUpdatesAutomatically
-            || preferences.LastUpdateCheck is { } last && DateTimeOffset.Now - last < AutomaticCheckInterval)
+        if (!UpdateService.IsConfigured || !preferences.CheckForUpdatesAutomatically || _availableUpdate is not null)
+        {
+            return;
+        }
+
+        // Not due yet, unless the last check found an update: look it up again to show it.
+        bool due = preferences.LastUpdateCheck is not { } last || DateTimeOffset.Now - last >= AutomaticCheckInterval;
+        bool knownUpdate = SemanticVersion.TryParse(preferences.AvailableVersion) is { } known
+            && known > UpdateService.CurrentVersion && preferences.AvailableVersion != preferences.SkippedVersion;
+        if (!due && !knownUpdate)
         {
             return;
         }
@@ -37,12 +61,17 @@ public partial class MainWindow
         {
             var update = await UpdateService.CheckAsync(IncludePreReleases);
             preferences.LastUpdateCheck = DateTimeOffset.Now;
+            preferences.AvailableVersion = update?.Version.ToString();
             preferences.Save();
 
             if (update is not null && update.Version.ToString() != preferences.SkippedVersion)
             {
                 ShowUpdateBanner(update);
-                NotifyIfInBackground("Update available", $"DevPilot {update.Version} is available. Open DevPilot to update.");
+                if (_notifiedVersion != update.Version.ToString())
+                {
+                    _notifiedVersion = update.Version.ToString();
+                    NotifyIfInBackground("Update available", $"DevPilot {update.Version} is available. Open DevPilot to update.");
+                }
             }
         }
         catch
@@ -71,6 +100,7 @@ public partial class MainWindow
         {
             var update = await UpdateService.CheckAsync(IncludePreReleases);
             App.Preferences.LastUpdateCheck = DateTimeOffset.Now;
+            App.Preferences.AvailableVersion = update?.Version.ToString();
             App.Preferences.Save();
 
             if (update is null)
@@ -117,9 +147,14 @@ public partial class MainWindow
         _availableUpdate = update;
         UpdateBannerText.Text = $"DevPilot {update.Version} is available. You have {UpdateService.CurrentVersion}.";
         UpdateBanner.Visibility = Visibility.Visible;
+        PageInfo.SetBadge(SettingsTab, "1");
     }
 
-    private void HideUpdateBanner() => UpdateBanner.Visibility = Visibility.Collapsed;
+    private void HideUpdateBanner()
+    {
+        UpdateBanner.Visibility = Visibility.Collapsed;
+        PageInfo.SetBadge(SettingsTab, "");
+    }
 
     private void ShowUpdateWindow(ReleaseInfo update)
     {

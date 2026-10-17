@@ -68,7 +68,9 @@ public partial class MainWindow
 
             SettingsKeepAwakeBox.IsChecked = prefs.RemoteKeepAwake;
 
-            SettingsVersionText.Text = $"DevPilot {UpdateService.CurrentVersion} ({UpdateService.Architecture})";
+            SettingsVersionText.Text = $"DevPilot {UpdateService.CurrentVersion} ({UpdateService.Architecture})" +
+                (_availableUpdate is { } update ? $" · version {update.Version} is available: click Check Now to install it" : "");
+            SettingsVersionText.SetResourceReference(TextBlock.ForegroundProperty, _availableUpdate is null ? "Brush.TextSecondary" : "Brush.Accent");
             SettingsAutoUpdateBox.IsChecked = prefs.CheckForUpdatesAutomatically;
             bool preRelease = UpdateService.CurrentVersion.IsPreRelease;
             SettingsPreReleaseBox.IsChecked = prefs.IncludePreReleases || preRelease;
