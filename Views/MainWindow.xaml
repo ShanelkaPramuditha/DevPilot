@@ -425,6 +425,14 @@
                     Visibility="Collapsed"
                     Click="InstallWsl_Click"/>
                 <Button
+                    x:Name="PaletteButton"
+                    Style="{StaticResource IconButton}"
+                    ToolTip="Search commands (Ctrl+K)"
+                    AutomationProperties.Name="Search commands"
+                    Click="CommandPalette_Click">
+                    <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"/>
+                </Button>
+                <Button
                     x:Name="MoreButton"
                     Style="{StaticResource IconButton}"
                     ToolTip="More options"
@@ -439,6 +447,10 @@
                                       ToolTip="Resource limits, networking and other settings shared by all distributions"/>
                             <MenuItem x:Name="UpdateWslItem" Header="_Update WSL..." Click="UpdateWsl_Click"/>
                             <MenuItem x:Name="ShutdownWslItem" Header="Shut _Down WSL..." Click="ShutdownWsl_Click"/>
+                            <Separator/>
+                            <MenuItem x:Name="CloseToTrayItem" Header="Keep Running in _Notification Area" IsCheckable="True" Click="CloseToTray_Click"
+                                      ToolTip="Closing the window keeps DevPilot in the notification area, with quick access to your distributions"/>
+                            <MenuItem x:Name="StartWithWindowsItem" Header="Start with _Windows" IsCheckable="True" Click="StartWithWindows_Click"/>
                             <Separator/>
                             <MenuItem Header="_Theme">
                                 <MenuItem x:Name="ThemeSystemItem" Header="Use _Windows setting" IsCheckable="True" Tag="System" Click="Theme_Click"/>
@@ -497,6 +509,8 @@
                                         <MenuItem x:Name="SetDefaultItem" Header="Set as _Default" Click="SetDefault_Click"/>
                                         <MenuItem x:Name="ConvertVersionItem" Header="Convert to WSL 2" Click="ConvertVersion_Click"/>
                                         <Separator x:Name="BackupSeparator"/>
+                                        <MenuItem x:Name="CloneItem" Header="_Clone..." Click="Clone_Click"
+                                                  ToolTip="Make a copy of this distribution under a new name"/>
                                         <MenuItem x:Name="ExportItem" Header="_Export..." Click="Export_Click"/>
                                         <MenuItem x:Name="ImportItem" Header="_Import..." Click="Import_Click"/>
                                         <Separator x:Name="UnregisterSeparator"/>
@@ -1160,6 +1174,103 @@
                                     <Button Content="Create Config File" Style="{StaticResource AccentButton}" Margin="0,0,8,0" Click="SshCreateFile_Click"/>
                                     <Button Content="Choose Existing File..." Margin="0" Click="SshChangeFile_Click"/>
                                 </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </DockPanel>
+                </TabItem>
+                <TabItem x:Name="KeysTab" Header="SSH Keys"
+                         nav:PageInfo.Glyph="&#xE192;"
+                         nav:PageInfo.Group="Tools"
+                         nav:PageInfo.Subtitle="Your SSH key pairs. Right-click a key to copy its public key or add it to ssh-agent.">
+                    <DockPanel Margin="0,4,0,0">
+                        <!-- ssh-agent and actions -->
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="14,10">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="AgentButton" Content="Turn On ssh-agent" Margin="8,0,8,0" Visibility="Collapsed" Click="AgentEnable_Click"
+                                            ToolTip="Start the ssh-agent service and start it automatically from now on (asks for admin rights)"/>
+                                    <Button Content="Open Folder" Margin="0,0,8,0" Click="KeysOpenFolder_Click"/>
+                                    <Button Content="Generate Key" Style="{StaticResource AccentButton}" Click="KeyGenerate_Click"/>
+                                </StackPanel>
+                                <Ellipse x:Name="AgentDot" Width="10" Height="10" Margin="0,0,12,0" VerticalAlignment="Center" Fill="{DynamicResource Brush.TextMuted}"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="AgentText" FontWeight="SemiBold" Text="Checking ssh-agent..."/>
+                                    <TextBlock x:Name="AgentHint" Style="{StaticResource HintText}"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <TextBlock x:Name="KeysStatusText" DockPanel.Dock="Bottom" Margin="0,8,0,0" Style="{StaticResource HintText}"/>
+
+                        <Grid>
+                            <ListView
+                                x:Name="KeyList"
+                                SelectionMode="Single"
+                                PreviewMouseRightButtonDown="List_PreviewMouseRightButtonDown"
+                                MouseDoubleClick="KeyList_MouseDoubleClick">
+                                <ListView.ContextMenu>
+                                    <ContextMenu x:Name="KeyMenu" Opened="KeyMenu_Opened">
+                                        <MenuItem x:Name="KeyCopyItem" Header="_Copy Public Key" FontWeight="SemiBold" Click="KeyCopy_Click"/>
+                                        <MenuItem x:Name="KeyAgentItem" Header="_Add to ssh-agent" Click="KeyAddToAgent_Click"/>
+                                        <MenuItem x:Name="KeyCreatePublicItem" Header="Create _Public Key" Click="KeyCreatePublic_Click"/>
+                                        <MenuItem x:Name="KeyShowItem" Header="_Show in Explorer" Click="KeyShow_Click"/>
+                                        <Separator/>
+                                        <MenuItem x:Name="KeyDeleteItem" Header="_Delete..." Click="KeyDelete_Click"/>
+                                    </ContextMenu>
+                                </ListView.ContextMenu>
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Width="300">
+                                            <GridViewColumnHeader Content="Key"/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel ToolTip="{Binding Problem}">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding Problem}" FontSize="12" Foreground="{DynamicResource Brush.WarningText}"
+                                                                   TextTrimming="CharacterEllipsis">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Problem}" Value="{x:Null}">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Type" Width="100" DisplayMemberBinding="{Binding TypeText}"/>
+                                        <GridViewColumn Width="340">
+                                            <GridViewColumnHeader Content="Fingerprint" ToolTip="Compare with the fingerprint a server or GitHub shows for the key"/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Fingerprint}" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                                               Foreground="{DynamicResource Brush.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Comment" Width="150" DisplayMemberBinding="{Binding Comment}"/>
+                                        <GridViewColumn Width="80">
+                                            <GridViewColumnHeader Content="ssh-agent"/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding AgentText}" Foreground="{DynamicResource Brush.Success}" FontWeight="SemiBold"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Created" Width="100" DisplayMemberBinding="{Binding CreatedText}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                            <StackPanel x:Name="KeysEmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440" Visibility="Collapsed">
+                                <TextBlock Text="&#xE192;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="36"
+                                           HorizontalAlignment="Center" Foreground="{DynamicResource Brush.TextMuted}"/>
+                                <TextBlock Text="No SSH keys yet" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Style="{StaticResource HintText}" TextAlignment="Center"
+                                           Text="Generate a key to log in to servers and GitHub without a password."/>
                             </StackPanel>
                         </Grid>
                     </DockPanel>

@@ -61,6 +61,11 @@ public partial class MainWindow
         {
             await OnToolsPageOpenedAsync();
         }
+
+        if (DistroTabs.SelectedItem == KeysTab)
+        {
+            await LoadKeysAsync();
+        }
         UpdateUsageTimer();
         if (IsUsageTabOpen)
         {

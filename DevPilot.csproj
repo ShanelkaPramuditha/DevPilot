@@ -4,6 +4,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
+    <!-- Only for the notification area (tray) icon: Views/TrayIcon.cs -->
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>DevPilot</AssemblyName>
     <RootNamespace>DevPilot</RootNamespace>
     <AssemblyTitle>DevPilot</AssemblyTitle>
@@ -16,6 +18,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Windows Forms is used for the tray icon only: keep its names (MessageBox, Button, ...) from clashing with WPF. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Window icon and the logo shown in the sidebar -->
     <Resource Include="Assets\DevPilot.ico" />
     <Resource Include="Assets\DevPilot.png" />
@@ -25,6 +33,8 @@
     <!-- Show the MainWindow partial classes under MainWindow.xaml in Solution Explorer -->
     <Compile Update="Views\MainWindow.Catalog.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.DistroActions.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Keys.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Palette.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Shell.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Sidebar.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Ssh.cs" DependentUpon="MainWindow.xaml" />

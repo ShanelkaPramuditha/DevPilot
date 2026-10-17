@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         InitializeSidebar();
         InitializeSsh();
         InitializeTools();
+        InitializeTray();
         RestoreWindowSize();
     }
 
@@ -318,7 +319,7 @@ public partial class MainWindow : Window
         {
             OpenTerminalItem, OpenVsCodeItem, OpenFilesItem, FolderMountsItem, SettingsItem, LifecycleSeparator,
             StartDistroItem, RestartDistroItem, StopDistroItem, SettingsSeparator,
-            SetDefaultItem, ConvertVersionItem, BackupSeparator, ExportItem,
+            SetDefaultItem, ConvertVersionItem, BackupSeparator, CloneItem, ExportItem,
             UnregisterSeparator, UnregisterItem
         })
         {

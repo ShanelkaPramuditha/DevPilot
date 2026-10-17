@@ -1,0 +1,56 @@
+<Window x:Class="DevPilot.Views.Dialogs.GenerateKeyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Icon="pack://application:,,,/DevPilot;component/Assets/DevPilot.ico"
+        Title="Generate SSH Key"
+        Width="560"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Window.Resources>
+        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="MinWidth" Value="90"/>
+        </Style>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
+        </Style>
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="20,10,20,18">
+        <TextBlock Text="Key type" Style="{StaticResource Label}"/>
+        <ComboBox x:Name="TypeBox" SelectedIndex="0" SelectionChanged="TypeBox_SelectionChanged">
+            <ComboBoxItem Content="Ed25519 (recommended)" Tag="ed25519"/>
+            <ComboBoxItem Content="RSA 4096 (for old servers)" Tag="rsa"/>
+        </ComboBox>
+
+        <TextBlock Text="File name" Style="{StaticResource Label}"/>
+        <TextBox x:Name="NameBox" Padding="6,4"/>
+        <TextBlock x:Name="PathHint" Style="{StaticResource Hint}"/>
+
+        <TextBlock Text="Comment" Style="{StaticResource Label}"/>
+        <TextBox x:Name="CommentBox" Padding="6,4"/>
+        <TextBlock Style="{StaticResource Hint}" Text="Shown next to the key on servers and on GitHub, usually your email or user@computer."/>
+
+        <TextBlock Text="Passphrase (recommended)" Style="{StaticResource Label}"/>
+        <PasswordBox x:Name="PassphraseBox" Padding="6,4"/>
+        <PasswordBox x:Name="ConfirmBox" Padding="6,4" Margin="0,6,0,0" ToolTip="Type the passphrase again"/>
+        <TextBlock Style="{StaticResource Hint}" Text="Protects the key if someone copies the file. With ssh-agent you type it only once per sign-in. Leave empty for no passphrase."/>
+
+        <CheckBox x:Name="AddToAgentBox" Content="Add the key to ssh-agent afterwards" IsChecked="True" Margin="0,14,0,0"/>
+
+        <TextBlock x:Name="ErrorText" Foreground="{DynamicResource Brush.Error}" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="Generate" IsDefault="True" Margin="0,0,8,0" Click="Generate_Click"/>
+            <Button Content="Cancel" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

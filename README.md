@@ -2,9 +2,15 @@
 
 # DevPilot
 
-DevPilot is a Windows desktop app (WPF, .NET 10) for managing WSL: install WSL and
-Linux distributions, start/stop/configure them, mount Windows folders, and watch
-resource usage.
+DevPilot is a Windows desktop app (WPF, .NET 10) for developers who work with WSL:
+
+- **WSL:** install WSL and Linux distributions; start, stop, restart, clone, export/import and configure them
+  (wsl.conf, .wslconfig resource limits, disk size); mount Windows folders; live CPU, memory, disk and port usage.
+- **Dev tools:** install and update Git, Docker, Node.js, Python, .NET, Go, Rust, Java and more, on Windows
+  (winget) or inside a distribution (apt, dnf, pacman, zypper).
+- **SSH:** manage hosts in your SSH config, connect and test connections; generate and manage SSH keys and ssh-agent.
+- **Everyday use:** command palette (Ctrl+K), notification-area icon with quick distribution actions,
+  start with Windows, light and dark theme, in-app updates.
 
 ## Build, run and test
 

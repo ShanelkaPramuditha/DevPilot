@@ -19,6 +19,9 @@ public sealed class AppPreferences
 
     public bool SidebarCollapsed { get; set; }
 
+    /// <summary>Closing the window keeps DevPilot running in the notification area.</summary>
+    public bool CloseToTray { get; set; }
+
     /// <summary>Check GitHub for a newer version when DevPilot starts (at most every few hours).</summary>
     public bool CheckForUpdatesAutomatically { get; set; } = true;
 

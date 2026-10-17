@@ -42,6 +42,7 @@ public partial class MainWindow
             if (update is not null && update.Version.ToString() != preferences.SkippedVersion)
             {
                 ShowUpdateBanner(update);
+                NotifyIfInBackground("Update available", $"DevPilot {update.Version} is available. Open DevPilot to update.");
             }
         }
         catch
@@ -49,6 +50,9 @@ public partial class MainWindow
             // Try again at the next start.
         }
     }
+
+    /// <summary>The startup check, for when DevPilot starts hidden in the notification area.</summary>
+    public Task CheckForUpdatesWhileHiddenAsync() => CheckForUpdatesInBackgroundAsync();
 
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {

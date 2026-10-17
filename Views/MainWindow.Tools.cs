@@ -297,6 +297,7 @@ public partial class MainWindow
         finally
         {
             _cancelToolOperation = null;
+            NotifyIfInBackground(row.Name, ToolOperationText.Text);
             ToolProgress.Visibility = Visibility.Collapsed;
             ToolCancelButton.Visibility = Visibility.Collapsed;
             ToolHideOutputButton.Visibility = Visibility.Visible;

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using DevPilot.Core;
 using DevPilot.Models;
 using DevPilot.Services.Platform;
 using DevPilot.Services.Wsl;
@@ -268,20 +269,14 @@ public partial class MainWindow
         string suggestedName = Path.GetFileName(file).Split('.')[0];
 
         string? name = PromptForText("Import Distribution", "Name for the new distribution:", suggestedName);
-        if (string.IsNullOrWhiteSpace(name))
+        if (name is null)
         {
             return;
         }
 
-        if (name.Any(char.IsWhiteSpace))
+        if (DistroNames.Validate(name, _installed.Select(d => d.Name)) is { } nameError)
         {
-            ShowError("The distribution name cannot contain spaces.");
-            return;
-        }
-
-        if (_installed.Any(d => d.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
-        {
-            ShowError($"A distribution named {name} already exists.");
+            ShowError(nameError);
             return;
         }
 
@@ -318,6 +313,100 @@ public partial class MainWindow
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         });
+    }
+
+    /// <summary>
+    /// Copies a distribution under a new name: exports it to a temporary file and imports
+    /// that next to the original. WSL 2 distributions are copied as a disk image (faster).
+    /// </summary>
+    private async void Clone_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedDistro is not { } distro)
+        {
+            return;
+        }
+
+        var existing = _installed.Select(d => d.Name).ToList();
+        string? name = PromptForText("Clone Distribution", $"Name for the copy of {distro.Name}:",
+            DistroNames.SuggestCopyName(distro.Name, existing));
+        if (name is null)
+        {
+            return;
+        }
+
+        if (DistroNames.Validate(name, existing) is { } nameError)
+        {
+            ShowError(nameError);
+            return;
+        }
+
+        // Next to the original (for example %LocalAppData%\wsl\<name>); it can be moved later in Settings → Disk.
+        string parent = Path.GetDirectoryName(distro.Location ?? "") is { Length: > 0 } folder
+            ? folder
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "wsl");
+        string location = Path.Combine(parent, name);
+        bool asVhd = distro.Version == "2";
+        string temp = Path.Combine(Path.GetTempPath(), $"devpilot-clone-{Guid.NewGuid():N}.{(asVhd ? "vhdx" : "tar")}");
+
+        // The copy is written twice (temporary file, then the new distribution).
+        if (distro.DiskBytes is { } size && new DriveInfo(Path.GetPathRoot(temp)!).AvailableFreeSpace < size * 2)
+        {
+            ShowError($"Not enough free disk space to clone {distro.Name}: about {Format.Size(size * 2)} is needed.");
+            return;
+        }
+
+        var answer = MessageBox.Show(this,
+            $"Clone {distro.Name} as {name}?\n\nThe copy is stored in {location}." +
+            (distro.IsRunning ? $"\n\n{distro.Name} will be stopped while it is copied." : ""),
+            "Clone Distribution", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        await RunBusyAsync($"Cloning {distro.Name} as {name}... this can take several minutes.", async () =>
+        {
+            // Imported distributions log in as root unless wsl.conf says otherwise.
+            string user = (await WslService.RunAsync(TimeSpan.FromMinutes(1), "--distribution", distro.Name, "--exec", "id", "-un")).StandardOutput.Trim();
+
+            try
+            {
+                string[] export = asVhd ? ["--export", distro.Name, temp, "--vhd"] : ["--export", distro.Name, temp];
+                string[] import = asVhd ? ["--import", name, location, temp, "--vhd"] : ["--import", name, location, temp];
+                await WslService.RunCheckedAsync(export);
+                Directory.CreateDirectory(location);
+                await WslService.RunCheckedAsync(import);
+            }
+            finally
+            {
+                File.Delete(temp);
+            }
+
+            await KeepDefaultUserAsync(name, user);
+            await RefreshInstalledAsync();
+            BusyText.Text = $"{name} is a copy of {distro.Name}.";
+            NotifyIfInBackground("Clone finished", $"{name} is a copy of {distro.Name}.");
+        });
+    }
+
+    /// <summary>Makes a copied distribution log in as the same user as the original.</summary>
+    private static async Task KeepDefaultUserAsync(string distro, string user)
+    {
+        if (user.Length == 0 || user == "root")
+        {
+            return;
+        }
+
+        string current = (await WslService.RunAsync(TimeSpan.FromMinutes(1), "--distribution", distro, "--exec", "id", "-un")).StandardOutput.Trim();
+        if (current == user)
+        {
+            return;
+        }
+
+        var conf = IniDocument.Parse(await WslSettings.ReadWslConfAsync(distro));
+        conf.Set("user", "default", user);
+        await WslSettings.WriteWslConfAsync(distro, conf.ToString());
+        await WslService.RunCheckedAsync("--terminate", distro);
     }
 
     private async void Unregister_Click(object sender, RoutedEventArgs e)
