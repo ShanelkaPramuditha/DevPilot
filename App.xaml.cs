@@ -57,18 +57,20 @@ public partial class App : Application
         base.OnStartup(e);
 
         var window = new MainWindow();
-        bool minimized = e.Args.Contains(StartupRegistration.MinimizedSwitch, StringComparer.OrdinalIgnoreCase);
-        if (minimized && Preferences.CloseToTray)
+        bool startedWithWindows = e.Args.Contains(StartupRegistration.MinimizedSwitch, StringComparer.OrdinalIgnoreCase);
+        var mode = startedWithWindows ? Preferences.EffectiveStartupWindow : StartupWindowMode.Window;
+        if (mode == StartupWindowMode.NotificationArea)
         {
-            // Started with Windows: stay in the notification area until opened,
-            // but still look for updates (a notification appears if there is one).
+            // Stay in the notification area until opened, but still keep distributions
+            // running and look for updates (a notification appears if there is one).
+            window.StartInNotificationArea();
             _ = Views.MainWindow.StartKeptRunningDistrosAsync();
             _ = window.CheckForUpdatesWhileHiddenAsync();
             return;
         }
 
         window.Show();
-        if (minimized)
+        if (mode == StartupWindowMode.Taskbar)
         {
             window.WindowState = WindowState.Minimized;
         }

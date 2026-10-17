@@ -13,7 +13,8 @@ DevPilot is a Windows desktop app (WPF, .NET 10) for developers who work with WS
   forward and firewall rules) or from anywhere with Tailscale, without opening ports on your router;
   optionally keeps the PC awake while someone is connected.
 - **Everyday use:** command palette (Ctrl+K), notification-area icon with quick distribution actions,
-  start with Windows, light and dark theme, in-app updates.
+  start with Windows (hidden, minimized or open), minimize or close to the notification area, light and dark theme,
+  notifications for finished work, in-app updates; all on the Settings page (Ctrl+,).
 
 ## Build, run and test
 

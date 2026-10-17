@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
-using DevPilot.Services.Platform;
 using DevPilot.Theming;
 
 namespace DevPilot.Views;
@@ -20,13 +19,6 @@ public partial class MainWindow
 
     private void MoreMenu_Opened(object sender, RoutedEventArgs e)
     {
-        WslSettingsItem.IsEnabled = _wslInstalled && !_busy;
-        UpdateWslItem.IsEnabled = _wslInstalled && !_busy;
-        ShutdownWslItem.IsEnabled = _wslInstalled && !_busy;
-
-        CloseToTrayItem.IsChecked = App.Preferences.CloseToTray;
-        StartWithWindowsItem.IsChecked = StartupRegistration.IsEnabled;
-
         ThemeSystemItem.IsChecked = ThemeManager.Current == AppTheme.System;
         ThemeLightItem.IsChecked = ThemeManager.Current == AppTheme.Light;
         ThemeDarkItem.IsChecked = ThemeManager.Current == AppTheme.Dark;
@@ -46,6 +38,7 @@ public partial class MainWindow
     {
         MessageBox.Show(this,
             "Ctrl+K\tCommand palette: find any page, action, distribution or SSH host\n" +
+            "Ctrl+,\tSettings\n" +
             "F5\tRefresh\n" +
             "Ctrl+1, 2, 3\tSwitch between Installed, Available and Usage\n" +
             "Ctrl+F\tSearch available distributions\n" +
@@ -70,6 +63,10 @@ public partial class MainWindow
             case System.Windows.Input.Key.P when System.Windows.Input.Keyboard.Modifiers == (System.Windows.Input.ModifierKeys.Control | System.Windows.Input.ModifierKeys.Shift):
                 e.Handled = true;
                 ShowCommandPalette();
+                break;
+            case System.Windows.Input.Key.OemComma when ctrl:
+                e.Handled = true;
+                DistroTabs.SelectedItem = SettingsTab;
                 break;
             case System.Windows.Input.Key.F when ctrl:
                 e.Handled = true;
@@ -119,7 +116,7 @@ public partial class MainWindow
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         // With the tray option on, closing only hides the window.
-        if (!_exiting && _tray is not null)
+        if (!_exiting && App.Preferences.CloseToTray && _tray is not null)
         {
             e.Cancel = true;
             Hide();
@@ -148,20 +145,34 @@ public partial class MainWindow
     private bool _exiting;
     private bool _trayHintShown;
 
+    /// <summary>Normal or maximized, before the window was minimized: restored from the notification area.</summary>
+    private WindowState? _restoreState;
+
     private void InitializeTray()
     {
-        if (App.Preferences.CloseToTray)
+        UpdateTrayIcon();
+        Loaded += (_, _) => _restoreState ??= WindowState == WindowState.Minimized ? null : WindowState;
+        StateChanged += (_, _) =>
         {
-            _tray = new TrayIcon(this);
-        }
+            if (WindowState != WindowState.Minimized)
+            {
+                _restoreState = WindowState;
+            }
+
+            // "Minimize to the notification area": hide instead of a taskbar button.
+            if (WindowState == WindowState.Minimized && App.Preferences.MinimizeToTray && !_exiting)
+            {
+                _tray ??= new TrayIcon(this);
+                Hide();
+            }
+        };
     }
 
-    private void CloseToTray_Click(object sender, RoutedEventArgs e)
+    /// <summary>The notification area icon is shown while an option uses it, or while the window is hidden there.</summary>
+    private void UpdateTrayIcon()
     {
-        App.Preferences.CloseToTray = CloseToTrayItem.IsChecked;
-        App.Preferences.Save();
-
-        if (App.Preferences.CloseToTray)
+        bool needed = App.Preferences.CloseToTray || App.Preferences.MinimizeToTray || (IsLoaded && !IsVisible);
+        if (needed)
         {
             _tray ??= new TrayIcon(this);
         }
@@ -172,24 +183,8 @@ public partial class MainWindow
         }
     }
 
-    private void StartWithWindows_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            if (StartWithWindowsItem.IsChecked)
-            {
-                StartupRegistration.Enable();
-            }
-            else
-            {
-                StartupRegistration.Disable();
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowError($"Could not change the startup setting: {ex.Message}");
-        }
-    }
+    /// <summary>Started with Windows, hidden: only the notification area icon is shown.</summary>
+    public void StartInNotificationArea() => _tray ??= new TrayIcon(this);
 
     /// <summary>Shows the window (from the tray, or when DevPilot is started a second time).</summary>
     public void ShowFromTray()
@@ -197,7 +192,7 @@ public partial class MainWindow
         Show();
         if (WindowState == WindowState.Minimized)
         {
-            WindowState = App.Preferences.WindowMaximized ? WindowState.Maximized : WindowState.Normal;
+            WindowState = _restoreState ?? (App.Preferences.WindowMaximized ? WindowState.Maximized : WindowState.Normal);
         }
 
         Activate();
@@ -230,7 +225,7 @@ public partial class MainWindow
     /// </summary>
     private void NotifyIfInBackground(string title, string message)
     {
-        if (IsActive)
+        if (IsActive || !App.Preferences.NotifyWhenDone)
         {
             return;
         }

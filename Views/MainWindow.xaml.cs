@@ -72,6 +72,7 @@ public partial class MainWindow : Window
         BusyProgress.Visibility = Visibility.Visible;
         HeaderPanel.IsEnabled = false;
         DistroTabs.IsEnabled = false;
+        UpdateNavActions();
 
         try
         {
@@ -91,6 +92,7 @@ public partial class MainWindow : Window
             // state, and others (such as SSH) do not need WSL at all.
             DistroTabs.IsEnabled = true;
             UpdateButtons();
+            UpdateNavActions();
         }
     }
 
@@ -105,6 +107,7 @@ public partial class MainWindow : Window
         {
             WslStatusText.Text = "WSL is not installed";
             WslDetailsText.Text = "Click Install WSL to get started.";
+            WslMemoryInfoText.Text = "";
             StatusCard.ToolTip = "WSL was not found on this system. Install it to manage Linux distributions.";
             _installed.Clear();
             _online.Clear();
@@ -117,16 +120,16 @@ public partial class MainWindow : Window
 
         string details = await GetWslDetailsAsync();
         StatusCard.ToolTip = details.Replace("   ·   ", "\n");
-        WslDetailsText.Text = CompactDetails(details);
+        (WslDetailsText.Text, WslMemoryInfoText.Text) = CompactDetails(details);
 
         await RefreshInstalledAsync();
         await RefreshCatalogAsync();
 
-        // Start on the "Available" tab when there is nothing installed yet.
+        // Start on the chosen page, else on "Available" when there is nothing installed yet.
         if (!_tabChosen)
         {
             _tabChosen = true;
-            DistroTabs.SelectedItem = _installed.Count == 0 ? AvailableTab : InstalledTab;
+            DistroTabs.SelectedItem = StartTab() ?? (_installed.Count == 0 ? AvailableTab : InstalledTab);
         }
     }
 
@@ -158,13 +161,15 @@ public partial class MainWindow : Window
         return string.Join("   ·   ", parts);
     }
 
-    /// <summary>"WSL version: 3.0.3.0 · Kernel version: ... · VM memory: Up to 7.9 GB" to "WSL 3.0.3.0 · VM up to 7.9 GB".</summary>
-    private static string CompactDetails(string details)
+    /// <summary>
+    /// "WSL version: 3.0.3.0 · Kernel version: ... · VM memory: Up to 7.9 GB" to the status
+    /// card's two labels: "WSL 3.0.3.0" and "VM up to 7.9 GB".
+    /// </summary>
+    private static (string Version, string Memory) CompactDetails(string details)
     {
-        var parts = details.Split("   ·   ");
-        string? wsl = parts.FirstOrDefault(p => p.StartsWith("WSL version:", StringComparison.OrdinalIgnoreCase));
-        string memory = $"VM {SystemInfo.WslMemoryText().Replace("Up to", "up to")}";
-        return wsl is null ? memory : $"WSL {wsl.Split(':', 2)[1].Trim()} · {memory}";
+        string? wsl = details.Split("   ·   ").FirstOrDefault(p => p.StartsWith("WSL version:", StringComparison.OrdinalIgnoreCase));
+        string memory = "VM " + SystemInfo.WslMemoryText().Replace("Up to", "up to", StringComparison.Ordinal).Replace(" (.wslconfig)", "", StringComparison.Ordinal);
+        return (wsl is null ? "WSL" : $"WSL {wsl.Split(':', 2)[1].Trim()}", memory);
     }
 
     private async Task RefreshInstalledAsync()

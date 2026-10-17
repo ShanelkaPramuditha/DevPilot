@@ -50,6 +50,7 @@ public partial class MainWindow
         }
 
         SyncNavSelection();
+        RememberPage();
 
         // Pick up changes made to the SSH config outside DevPilot.
         if (DistroTabs.SelectedItem == SshTab)
@@ -71,6 +72,12 @@ public partial class MainWindow
         {
             await OnRemotePageOpenedAsync();
         }
+
+        if (DistroTabs.SelectedItem == SettingsTab)
+        {
+            LoadSettingsPage();
+        }
+
         UpdateUsageTimer();
         if (IsUsageTabOpen)
         {

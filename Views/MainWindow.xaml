@@ -230,46 +230,76 @@
 
                 <!-- Shared settings and WSL status -->
                 <StackPanel DockPanel.Dock="Bottom">
-                    <Button
-                        x:Name="NavSettingsButton"
-                        Style="{StaticResource NavButton}"
-                        ToolTip="WSL Settings: resource limits, networking and more"
-                        Click="WslSettings_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE713;" Style="{StaticResource NavGlyph}"/>
-                            <TextBlock
-                                Text="WSL Settings"
-                                VerticalAlignment="Center"
-                                Visibility="{Binding IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Converter={StaticResource BoolToVisibility}}"/>
-                        </StackPanel>
-                    </Button>
-
+                    <!-- WSL status with quick actions (Views/MainWindow.Sidebar.cs) -->
                     <Border
                         x:Name="StatusCard"
                         Margin="2,8,2,0"
-                        Padding="10,8"
-                        CornerRadius="6"
+                        Padding="12,10,8,10"
+                        CornerRadius="8"
                         Background="{DynamicResource Brush.Card}"
                         BorderBrush="{DynamicResource Brush.CardStroke}"
                         BorderThickness="1"
-                        ToolTip="{Binding Text, ElementName=WslDetailsText}">
-                        <DockPanel>
-                            <Ellipse
-                                x:Name="StatusDot"
-                                DockPanel.Dock="Left"
-                                Width="10"
-                                Height="10"
-                                Margin="3,4,0,0"
-                                VerticalAlignment="Top"
-                                Fill="{DynamicResource Brush.TextMuted}"/>
-                            <StackPanel
-                                Margin="10,0,0,0"
-                                Visibility="{Binding IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock x:Name="WslStatusText" Text="Checking WSL..." FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                <TextBlock x:Name="WslDetailsText" Style="{StaticResource HintText}" FontSize="11" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </DockPanel>
+                        Visibility="{Binding IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Converter={StaticResource BoolToVisibility}}">
+                        <Border.Resources>
+                            <Style x:Key="StatusAction" TargetType="Button" BasedOn="{StaticResource NavIconButton}">
+                                <Setter Property="Width" Value="28"/>
+                                <Setter Property="Height" Value="28"/>
+                                <Setter Property="Margin" Value="2,0,0,0"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}"/>
+                            </Style>
+                        </Border.Resources>
+                        <StackPanel>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,-4,0,-4">
+                                    <Button x:Name="StatusUpdateButton" Style="{StaticResource StatusAction}" Click="UpdateWsl_Click"
+                                            ToolTip="Update WSL (wsl --update)" AutomationProperties.Name="Update WSL">
+                                        <TextBlock Text="&#xE777;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"/>
+                                    </Button>
+                                    <Button x:Name="StatusShutdownButton" Style="{StaticResource StatusAction}" Click="ShutdownWsl_Click"
+                                            ToolTip="Shut down WSL: stop all distributions and the virtual machine (wsl --shutdown)" AutomationProperties.Name="Shut down WSL">
+                                        <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"/>
+                                    </Button>
+                                </StackPanel>
+                                <Ellipse x:Name="StatusDot" Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Fill="{DynamicResource Brush.TextMuted}"/>
+                                <TextBlock x:Name="WslStatusText" Text="Checking WSL..." FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
+                            <Border Height="1" Margin="0,9,4,8" Background="{DynamicResource Brush.CardStroke}"/>
+                            <DockPanel Margin="0,0,4,0">
+                                <TextBlock x:Name="WslMemoryInfoText" DockPanel.Dock="Right" FontSize="11" Margin="8,0,0,0"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" ToolTip="Memory the WSL virtual machine may use"/>
+                                <TextBlock x:Name="WslDetailsText" FontSize="11" Foreground="{DynamicResource Brush.TextSecondary}" TextWrapping="Wrap"/>
+                            </DockPanel>
+                        </StackPanel>
                     </Border>
+
+                    <!-- Collapsed sidebar: the status dot; click it for the same actions -->
+                    <Button
+                        x:Name="StatusDotButton"
+                        Style="{StaticResource NavIconButton}"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.Name="WSL status and actions"
+                        ToolTip="{Binding ToolTip, ElementName=StatusCard}"
+                        Click="StatusCard_Click"
+                        Visibility="{Binding IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Converter={StaticResource BoolToVisibility}}">
+                        <Button.ContextMenu>
+                            <ContextMenu x:Name="WslStatusMenu" Placement="Top" Opened="WslStatusMenu_Opened">
+                                <MenuItem x:Name="StatusUpdateWslItem" Header="_Update WSL..." Click="UpdateWsl_Click"
+                                          ToolTip="Update WSL to the latest version (wsl --update)">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="&#xE777;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem x:Name="StatusShutdownWslItem" Header="Shut _Down WSL..." Click="ShutdownWsl_Click"
+                                          ToolTip="Stop all distributions and the WSL virtual machine (wsl --shutdown)">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                        <Ellipse Width="10" Height="10" Fill="{Binding Fill, ElementName=StatusDot}"/>
+                    </Button>
                 </StackPanel>
 
                 <!-- Pages, grouped -->
@@ -303,7 +333,8 @@
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Margin" Value="0,1"/>
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="ToolTip" Value="{Binding Tab.Header}"/>
+                            <Setter Property="ToolTip" Value="{Binding ToolTip}"/>
+                            <Setter Property="IsEnabled" Value="{Binding IsEnabled}"/>
                             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                             <Setter Property="Cursor" Value="Hand"/>
                             <Setter Property="Template">
@@ -330,6 +361,9 @@
                                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.NavSelected}"/>
                                                 <Setter TargetName="Pill" Property="Visibility" Value="Visible"/>
                                                 <Setter Property="TextElement.FontWeight" Value="SemiBold"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.45"/>
                                             </Trigger>
                                             <Trigger Property="IsKeyboardFocused" Value="True">
                                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
@@ -443,15 +477,8 @@
                         <ContextMenu x:Name="MoreMenu" Placement="Bottom" Opened="MoreMenu_Opened">
                             <MenuItem Header="_Refresh" InputGestureText="F5" Click="Refresh_Click"/>
                             <Separator/>
-                            <MenuItem x:Name="WslSettingsItem" Header="WSL _Settings..." Click="WslSettings_Click"
-                                      ToolTip="Resource limits, networking and other settings shared by all distributions"/>
-                            <MenuItem x:Name="UpdateWslItem" Header="_Update WSL..." Click="UpdateWsl_Click"/>
-                            <MenuItem x:Name="ShutdownWslItem" Header="Shut _Down WSL..." Click="ShutdownWsl_Click"/>
-                            <Separator/>
-                            <MenuItem x:Name="CloseToTrayItem" Header="Keep Running in _Notification Area" IsCheckable="True" Click="CloseToTray_Click"
-                                      ToolTip="Closing the window keeps DevPilot in the notification area, with quick access to your distributions"/>
-                            <MenuItem x:Name="StartWithWindowsItem" Header="Start with _Windows" IsCheckable="True" Click="StartWithWindows_Click"/>
-                            <Separator/>
+                            <MenuItem Header="_Settings" InputGestureText="Ctrl+," Click="OpenSettings_Click"
+                                      ToolTip="Startup, notification area, theme, notifications and updates"/>
                             <MenuItem Header="_Theme">
                                 <MenuItem x:Name="ThemeSystemItem" Header="Use _Windows setting" IsCheckable="True" Tag="System" Click="Theme_Click"/>
                                 <MenuItem x:Name="ThemeLightItem" Header="_Light" IsCheckable="True" Tag="Light" Click="Theme_Click"/>
@@ -1413,6 +1440,149 @@
                             </StackPanel>
                         </Grid>
                     </DockPanel>
+                </TabItem>
+                <TabItem x:Name="SettingsTab" Header="Settings"
+                         nav:PageInfo.Glyph="&#xE9E9;"
+                         nav:PageInfo.Group="DevPilot"
+                         nav:PageInfo.Subtitle="How DevPilot starts, minimizes and closes, its look, notifications and updates.">
+                    <ScrollViewer x:Name="SettingsScroll" Margin="0,4,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,8,0" MaxWidth="900" HorizontalAlignment="Left">
+                            <StackPanel.Resources>
+                                <!-- One setting: a label on the left, the control on the right -->
+                                <Style x:Key="SettingLabel" TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                    <Setter Property="Margin" Value="0,0,16,0"/>
+                                </Style>
+                                <Style x:Key="SettingChoice" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                    <Setter Property="Width" Value="300"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                                <Style x:Key="SettingRow" TargetType="DockPanel">
+                                    <Setter Property="Margin" Value="0,6"/>
+                                    <Setter Property="LastChildFill" Value="True"/>
+                                </Style>
+                                <Style x:Key="SettingHint" TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Margin" Value="28,0,0,6"/>
+                                </Style>
+                            </StackPanel.Resources>
+
+                            <!-- Startup -->
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Startup" Style="{StaticResource CardTitle}"/>
+                                    <CheckBox x:Name="SettingsStartWithWindowsBox" Content="Start DevPilot when I sign in to Windows"
+                                              Checked="SettingsStartWithWindows_Changed" Unchecked="SettingsStartWithWindows_Changed"/>
+                                    <TextBlock Style="{StaticResource SettingHint}"
+                                               Text="Useful with remote access: distributions you keep running are started too, and update checks still run."/>
+                                    <DockPanel Style="{StaticResource SettingRow}">
+                                        <ComboBox x:Name="SettingsStartupWindowBox" DockPanel.Dock="Right" Style="{StaticResource SettingChoice}"
+                                                  SelectionChanged="SettingsStartupWindow_Changed">
+                                            <ComboBoxItem Content="Hidden in the notification area" Tag="NotificationArea"/>
+                                            <ComboBoxItem Content="Minimized on the taskbar" Tag="Taskbar"/>
+                                            <ComboBoxItem Content="Open the window" Tag="Window"/>
+                                        </ComboBox>
+                                        <TextBlock Text="When it starts with Windows" Style="{StaticResource SettingLabel}"/>
+                                    </DockPanel>
+                                    <DockPanel Style="{StaticResource SettingRow}">
+                                        <ComboBox x:Name="SettingsStartPageBox" DockPanel.Dock="Right" Style="{StaticResource SettingChoice}"
+                                                  SelectionChanged="SettingsStartPage_Changed"/>
+                                        <TextBlock Text="Open on page" Style="{StaticResource SettingLabel}"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Window and notification area -->
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Window and notification area" Style="{StaticResource CardTitle}"/>
+                                    <DockPanel Style="{StaticResource SettingRow}">
+                                        <ComboBox x:Name="SettingsMinimizeBox" DockPanel.Dock="Right" Style="{StaticResource SettingChoice}"
+                                                  SelectionChanged="SettingsMinimize_Changed">
+                                            <ComboBoxItem Content="Minimize to the taskbar" Tag="Taskbar"/>
+                                            <ComboBoxItem Content="Hide in the notification area" Tag="NotificationArea"/>
+                                        </ComboBox>
+                                        <TextBlock Text="When I minimize the window" Style="{StaticResource SettingLabel}"/>
+                                    </DockPanel>
+                                    <DockPanel Style="{StaticResource SettingRow}">
+                                        <ComboBox x:Name="SettingsCloseBox" DockPanel.Dock="Right" Style="{StaticResource SettingChoice}"
+                                                  SelectionChanged="SettingsClose_Changed">
+                                            <ComboBoxItem Content="Exit DevPilot" Tag="Exit"/>
+                                            <ComboBoxItem Content="Keep running in the notification area" Tag="NotificationArea"/>
+                                        </ComboBox>
+                                        <TextBlock Text="When I close the window" Style="{StaticResource SettingLabel}"/>
+                                    </DockPanel>
+                                    <TextBlock Style="{StaticResource HintText}" FontSize="12" Margin="0,2,0,8"
+                                               Text="From the notification area icon you can open DevPilot, open a terminal, start or stop distributions, and exit. Left-click it to open the window."/>
+                                    <CheckBox x:Name="SettingsNotifyBox" Content="Tell me when long tasks finish while I'm in another app"
+                                              Checked="SettingsNotify_Changed" Unchecked="SettingsNotify_Changed"/>
+                                    <TextBlock Style="{StaticResource SettingHint}"
+                                               Text="Installs, updates, exports and remote access steps: a notification when the icon is in the notification area, otherwise a flashing taskbar button."/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Appearance -->
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Appearance" Style="{StaticResource CardTitle}"/>
+                                    <DockPanel Style="{StaticResource SettingRow}">
+                                        <ComboBox x:Name="SettingsThemeBox" DockPanel.Dock="Right" Style="{StaticResource SettingChoice}"
+                                                  SelectionChanged="SettingsTheme_Changed">
+                                            <ComboBoxItem Content="Use the Windows setting" Tag="System"/>
+                                            <ComboBoxItem Content="Light" Tag="Light"/>
+                                            <ComboBoxItem Content="Dark" Tag="Dark"/>
+                                        </ComboBox>
+                                        <TextBlock Text="Theme" Style="{StaticResource SettingLabel}"/>
+                                    </DockPanel>
+                                    <CheckBox x:Name="SettingsSidebarBox" Content="Show the sidebar as icons only" Margin="0,6,0,0"
+                                              Checked="SettingsSidebar_Changed" Unchecked="SettingsSidebar_Changed"/>
+                                    <TextBlock Style="{StaticResource SettingHint}" Text="The sidebar also shrinks to icons when the window is narrow."/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Remote access -->
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Remote access" Style="{StaticResource CardTitle}"/>
+                                    <CheckBox x:Name="SettingsKeepAwakeBox" Content="Keep this PC awake while someone is connected"
+                                              Checked="SettingsKeepAwake_Changed" Unchecked="SettingsKeepAwake_Changed"/>
+                                    <TextBlock Style="{StaticResource SettingHint}"
+                                               Text="While an SSH or Tailscale SSH session is open, Windows does not sleep on its idle timer. The screen can still turn off; closing the lid still sleeps."/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Updates -->
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="Check Now" VerticalAlignment="Top" Click="CheckForUpdates_Click"/>
+                                        <TextBlock Text="Updates" Style="{StaticResource CardTitle}"/>
+                                    </DockPanel>
+                                    <TextBlock x:Name="SettingsVersionText" Style="{StaticResource HintText}" Margin="0,0,0,8"/>
+                                    <CheckBox x:Name="SettingsAutoUpdateBox" Content="Check for updates automatically"
+                                              Checked="SettingsUpdates_Changed" Unchecked="SettingsUpdates_Changed"/>
+                                    <TextBlock Style="{StaticResource SettingHint}" Text="At most every few hours, when DevPilot starts. You choose whether to install."/>
+                                    <CheckBox x:Name="SettingsPreReleaseBox" Content="Include pre-releases (beta and release candidates)"
+                                              Checked="SettingsUpdates_Changed" Unchecked="SettingsUpdates_Changed"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Settings file -->
+                            <Border Style="{StaticResource Card}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="Open Folder" Margin="0,0,8,0" Click="SettingsOpenFolder_Click"/>
+                                        <Button Content="Reset to Defaults..." Click="SettingsReset_Click"/>
+                                    </StackPanel>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Your settings" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="SettingsPathText" Style="{StaticResource HintText}" FontSize="12"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </TabItem>
             </TabControl>
 

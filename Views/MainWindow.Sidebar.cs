@@ -44,9 +44,22 @@ public partial class MainWindow
     /// <summary>The user's choice; the window may still collapse it when narrow.</summary>
     private static bool PreferExpanded => !App.Preferences.SidebarCollapsed;
 
+    /// <summary>WSL-wide actions, listed under the WSL pages.</summary>
+    private List<NavItem> _wslNavActions = [];
+
     private void InitializeSidebar()
     {
         var items = DistroTabs.Items.OfType<TabItem>().Select(tab => new NavItem(tab)).ToList();
+
+        _wslNavActions =
+        [
+            NavItem.ForAction("WSL Settings", "\uE713", "WSL", "Resource limits, networking and other settings shared by all distributions",
+                () => WslSettings_Click(this, new RoutedEventArgs())),
+        ];
+        int afterWslPages = items.FindLastIndex(i => i.Group == "WSL") + 1;
+        items.InsertRange(afterWslPages, _wslNavActions);
+        UpdateNavActions();
+
         var view = new ListCollectionView(items);
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(NavItem.Group)));
         NavList.ItemsSource = view;
@@ -96,10 +109,46 @@ public partial class MainWindow
 
     private void NavList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_syncingNav && NavList.SelectedItem is NavItem item && DistroTabs.SelectedItem != item.Tab)
+        if (_syncingNav || NavList.SelectedItem is not NavItem item)
+        {
+            return;
+        }
+
+        if (item.Action is { } action)
+        {
+            // An action, not a page: keep the current page selected and run it once the click is done.
+            SyncNavSelection();
+            Dispatcher.BeginInvoke(action);
+        }
+        else if (DistroTabs.SelectedItem != item.Tab)
         {
             DistroTabs.SelectedItem = item.Tab;
         }
+    }
+
+    /// <summary>With the sidebar collapsed, the status dot opens Update WSL and Shut Down WSL.</summary>
+    private void StatusCard_Click(object sender, RoutedEventArgs e)
+    {
+        WslStatusMenu.PlacementTarget = StatusDotButton;
+        WslStatusMenu.IsOpen = true;
+    }
+
+    private void WslStatusMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        StatusUpdateWslItem.IsEnabled = _wslInstalled && !_busy;
+        StatusShutdownWslItem.IsEnabled = _wslInstalled && !_busy;
+    }
+
+    /// <summary>The WSL actions need WSL, and wait while another operation runs.</summary>
+    private void UpdateNavActions()
+    {
+        foreach (var item in _wslNavActions)
+        {
+            item.IsEnabled = _wslInstalled && !_busy;
+        }
+
+        StatusUpdateButton.IsEnabled = _wslInstalled && !_busy;
+        StatusShutdownButton.IsEnabled = _wslInstalled && !_busy;
     }
 
     /// <summary>Selects the sidebar entry of the current page (pages can also change from code or shortcuts).</summary>

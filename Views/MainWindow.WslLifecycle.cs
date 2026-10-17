@@ -77,6 +77,7 @@ public partial class MainWindow
             {
                 WslStatusText.Text = "Restart Windows to finish";
                 WslDetailsText.Text = "The WSL installation needs a restart.";
+                WslMemoryInfoText.Text = "";
                 MessageBox.Show(
                     "The WSL installation has finished, but WSL is not available yet.\n\n" +
                     "Restart Windows to complete the installation, then open this app again.",

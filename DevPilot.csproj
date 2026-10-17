@@ -36,6 +36,7 @@
     <Compile Update="Views\MainWindow.Keys.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Palette.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Remote.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Settings.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Shell.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Sidebar.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Ssh.cs" DependentUpon="MainWindow.xaml" />

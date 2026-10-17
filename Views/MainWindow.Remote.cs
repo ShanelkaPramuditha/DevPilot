@@ -40,6 +40,11 @@ public partial class MainWindow
 
     private void RemoteKeepAwake_Changed(object sender, RoutedEventArgs e)
     {
+        if (_loadingSettings)
+        {
+            return;
+        }
+
         App.Preferences.RemoteKeepAwake = RemoteKeepAwakeBox.IsChecked == true;
         App.Preferences.Save();
         UpdateKeepAwake();
