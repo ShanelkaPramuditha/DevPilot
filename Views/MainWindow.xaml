@@ -253,7 +253,12 @@
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,-4,0,-4">
                                     <Button x:Name="StatusUpdateButton" Style="{StaticResource StatusAction}" Click="UpdateWsl_Click"
                                             ToolTip="Update WSL (wsl --update)" AutomationProperties.Name="Update WSL">
-                                        <TextBlock Text="&#xE777;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"/>
+                                        <Grid>
+                                            <TextBlock x:Name="StatusUpdateIcon" Text="&#xE777;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"/>
+                                            <!-- A newer WSL is available -->
+                                            <Ellipse x:Name="StatusUpdateBadge" Width="7" Height="7" Margin="0,-3,-4,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                     Fill="{DynamicResource Brush.Accent}" Stroke="{DynamicResource Brush.Card}" StrokeThickness="1" Visibility="Collapsed"/>
+                                        </Grid>
                                     </Button>
                                     <Button x:Name="StatusShutdownButton" Style="{StaticResource StatusAction}" Click="ShutdownWsl_Click"
                                             ToolTip="Shut down WSL: stop all distributions and the virtual machine (wsl --shutdown)" AutomationProperties.Name="Shut down WSL">
@@ -298,7 +303,11 @@
                                 </MenuItem>
                             </ContextMenu>
                         </Button.ContextMenu>
-                        <Ellipse Width="10" Height="10" Fill="{Binding Fill, ElementName=StatusDot}"/>
+                        <Grid>
+                            <Ellipse Width="10" Height="10" Fill="{Binding Fill, ElementName=StatusDot}"/>
+                            <Ellipse Width="6" Height="6" Margin="0,-5,-6,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                     Fill="{DynamicResource Brush.Accent}" Visibility="{Binding Visibility, ElementName=StatusUpdateBadge}"/>
+                        </Grid>
                     </Button>
                 </StackPanel>
 

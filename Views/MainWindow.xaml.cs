@@ -121,6 +121,9 @@ public partial class MainWindow : Window
         string details = await GetWslDetailsAsync();
         StatusCard.ToolTip = details.Replace("   ·   ", "\n");
         (WslDetailsText.Text, WslMemoryInfoText.Text) = CompactDetails(details);
+        _wslVersion = WslUpdateCheck.ParseInstalledVersion(details);
+        ShowWslUpdateState();
+        _ = CheckForWslUpdateAsync();
 
         await RefreshInstalledAsync();
         await RefreshCatalogAsync();

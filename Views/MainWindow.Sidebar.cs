@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media.Animation;
 using DevPilot.Navigation;
+using DevPilot.Services.Wsl;
 
 namespace DevPilot.Views;
 
@@ -124,6 +125,39 @@ public partial class MainWindow
         {
             DistroTabs.SelectedItem = item.Tab;
         }
+    }
+
+    private Version? _wslVersion;
+    private Version? _latestWslVersion;
+    private bool _wslUpdateChecked;
+
+    /// <summary>Looks up the latest WSL once per run (GitHub limits anonymous requests).</summary>
+    private async Task CheckForWslUpdateAsync()
+    {
+        if (_wslUpdateChecked)
+        {
+            return;
+        }
+
+        _wslUpdateChecked = true;
+        _latestWslVersion = await WslUpdateCheck.GetLatestAsync();
+        ShowWslUpdateState();
+    }
+
+    /// <summary>A dot on the update button (and the collapsed status dot) when a newer WSL is out.</summary>
+    private void ShowWslUpdateState()
+    {
+        bool available = _wslInstalled && WslUpdateCheck.IsUpdateAvailable(_wslVersion, _latestWslVersion);
+        StatusUpdateBadge.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
+        StatusUpdateIcon.SetResourceReference(TextBlock.ForegroundProperty, available ? "Brush.Accent" : "Brush.TextSecondary");
+        StatusUpdateButton.ToolTip = available
+            ? $"WSL {Short(_latestWslVersion!)} is available (you have {Short(_wslVersion!)}). Click to update."
+            : _latestWslVersion is not null && _wslVersion is not null
+                ? $"WSL is up to date ({Short(_wslVersion)}). Click to check again and update (wsl --update)."
+                : "Update WSL (wsl --update)";
+        StatusUpdateWslItem.Header = available ? $"_Update WSL to {Short(_latestWslVersion!)}..." : "_Update WSL...";
+
+        static string Short(Version v) => v.Revision == 0 ? v.ToString(3) : v.ToString();
     }
 
     /// <summary>With the sidebar collapsed, the status dot opens Update WSL and Shut Down WSL.</summary>
