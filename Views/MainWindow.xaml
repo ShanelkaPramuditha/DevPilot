@@ -905,6 +905,135 @@
                         </ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem x:Name="ToolsTab" Header="Dev Tools"
+                         nav:PageInfo.Glyph="&#xE90F;"
+                         nav:PageInfo.Group="Tools"
+                         nav:PageInfo.Subtitle="Install, update and remove developer tools on Windows or inside a WSL distribution.">
+                    <DockPanel Margin="0,4,0,0">
+                        <!-- Where tools are installed -->
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="14,10">
+                            <DockPanel>
+                                <Button x:Name="ToolsRefreshButton" DockPanel.Dock="Right" Content="Refresh" Margin="8,0,0,0" Click="ToolsRefresh_Click"/>
+                                <TextBlock Text="Install on" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <ComboBox
+                                    x:Name="ToolTargetBox"
+                                    Width="240"
+                                    VerticalAlignment="Center"
+                                    SelectionChanged="ToolTarget_Changed"/>
+                                <TextBlock x:Name="ToolTargetHint" Style="{StaticResource HintText}" VerticalAlignment="Center" Margin="14,0,0,0"
+                                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Output of the running (or last) operation -->
+                        <Border x:Name="ToolOutputPanel" DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="14,10" Visibility="Collapsed">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Button x:Name="ToolCancelButton" Content="Cancel" Margin="8,0,8,0" Click="ToolCancel_Click"/>
+                                        <Button x:Name="ToolHideOutputButton" Content="Hide" Margin="0" Click="ToolHideOutput_Click"/>
+                                    </StackPanel>
+                                    <ProgressBar x:Name="ToolProgress" DockPanel.Dock="Left" Width="90" Height="6" IsIndeterminate="True" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="ToolOperationText" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                                <TextBox
+                                    x:Name="ToolOutputBox"
+                                    Height="170"
+                                    IsReadOnly="True"
+                                    FontFamily="Cascadia Mono, Consolas"
+                                    FontSize="12"
+                                    TextWrapping="NoWrap"
+                                    VerticalScrollBarVisibility="Auto"
+                                    HorizontalScrollBarVisibility="Auto"/>
+                            </DockPanel>
+                        </Border>
+
+                        <Grid>
+                            <ListView
+                                x:Name="ToolList"
+                                SelectionMode="Single"
+                                PreviewMouseRightButtonDown="List_PreviewMouseRightButtonDown">
+                                <ListView.ContextMenu>
+                                    <ContextMenu x:Name="ToolMenu" Opened="ToolMenu_Opened">
+                                        <MenuItem x:Name="ToolInstallItem" Header="_Install" FontWeight="SemiBold" Click="ToolInstall_Click"/>
+                                        <MenuItem x:Name="ToolUpdateItem" Header="_Update" Click="ToolUpdate_Click"/>
+                                        <MenuItem x:Name="ToolUninstallItem" Header="U_ninstall..." Click="ToolUninstall_Click"/>
+                                        <Separator/>
+                                        <MenuItem x:Name="ToolWebsiteItem" Header="Open _Website" Click="ToolWebsite_Click"/>
+                                    </ContextMenu>
+                                </ListView.ContextMenu>
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Width="360">
+                                            <GridViewColumnHeader Content="Tool"/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,2" ToolTip="{Binding Tooltip}">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding Description}" Foreground="{DynamicResource Brush.TextSecondary}"
+                                                                   TextTrimming="CharacterEllipsis" FontSize="12"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="130" DisplayMemberBinding="{Binding VersionText}">
+                                            <GridViewColumnHeader Content="Version"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="150">
+                                            <GridViewColumnHeader Content="Status"/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border CornerRadius="4" Padding="8,2" HorizontalAlignment="Left" ToolTip="{Binding Tooltip}">
+                                                        <TextBlock Text="{Binding Status}" FontWeight="SemiBold"/>
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="{DynamicResource Brush.Badge.Disabled}"/>
+                                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource Brush.Badge.DisabledText}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Installed">
+                                                                        <Setter Property="Background" Value="{DynamicResource Brush.Badge.Installed}"/>
+                                                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource Brush.Badge.InstalledText}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Update available">
+                                                                        <Setter Property="Background" Value="{DynamicResource Brush.Badge.Available}"/>
+                                                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource Brush.Badge.AvailableText}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Not installed">
+                                                                        <Setter Property="Background" Value="Transparent"/>
+                                                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource Brush.TextSecondary}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="190">
+                                            <GridViewColumnHeader Content=""/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding ActionText}" Tag="{Binding}" MinWidth="150" Padding="12,4" Margin="0"
+                                                            IsEnabled="{Binding CanAct}" ToolTip="{Binding Tooltip}" Click="ToolAction_Click"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                            <TextBlock
+                                x:Name="ToolPlaceholder"
+                                Style="{StaticResource HintText}"
+                                TextAlignment="Center"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                MaxWidth="460"
+                                Margin="24"
+                                IsHitTestVisible="False"
+                                Visibility="Collapsed"/>
+                        </Grid>
+                    </DockPanel>
+                </TabItem>
                 <TabItem x:Name="SshTab" Header="SSH"
                          nav:PageInfo.Glyph="&#xE8D7;"
                          nav:PageInfo.Group="Tools"

@@ -90,6 +90,14 @@ Put the page's code in a new partial file such as `Views/MainWindow.Tools.cs`, a
 `DependentUpon` list in `DevPilot.csproj` so it nests under `MainWindow.xaml`. Use
 `PageInfo.SetBadge(ToolsTab, "3")` to show a count in the sidebar. Glyphs are Segoe Fluent Icons code points.
 
+## Adding a dev tool
+
+The **Dev Tools** page is driven by `Services/Tools/ToolCatalog.cs`. Add an entry with the tool's
+winget id (and a pattern for other editions it should recognise), and/or its package names for
+`apt-get`, `dnf`, `pacman` and `zypper`. Leave a package manager out when its distributions do not
+ship the tool; DevPilot then shows the tool as unavailable there. Optional packages and a
+post-install script (run as root, `$1` is the distribution's default user) are supported too.
+
 ## Continuous integration and releases
 
 | Workflow | Runs on | Does |

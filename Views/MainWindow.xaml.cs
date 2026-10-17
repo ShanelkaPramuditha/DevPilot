@@ -36,6 +36,7 @@ public partial class MainWindow : Window
         InitializeUsage();
         InitializeSidebar();
         InitializeSsh();
+        InitializeTools();
         RestoreWindowSize();
     }
 

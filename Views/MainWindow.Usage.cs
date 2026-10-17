@@ -56,6 +56,11 @@ public partial class MainWindow
         {
             LoadSshConfig();
         }
+
+        if (DistroTabs.SelectedItem == ToolsTab)
+        {
+            await OnToolsPageOpenedAsync();
+        }
         UpdateUsageTimer();
         if (IsUsageTabOpen)
         {

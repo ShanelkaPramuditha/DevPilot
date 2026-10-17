@@ -28,6 +28,7 @@
     <Compile Update="Views\MainWindow.Shell.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Sidebar.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Ssh.cs" DependentUpon="MainWindow.xaml" />
+    <Compile Update="Views\MainWindow.Tools.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Updates.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.Usage.cs" DependentUpon="MainWindow.xaml" />
     <Compile Update="Views\MainWindow.WslLifecycle.cs" DependentUpon="MainWindow.xaml" />
