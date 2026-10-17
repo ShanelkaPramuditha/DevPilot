@@ -35,6 +35,7 @@ public partial class MainWindow : Window
         CollectionViewSource.GetDefaultView(_online).Filter = MatchesSearch;
         InitializeUsage();
         InitializeSidebar();
+        InitializeSsh();
         RestoreWindowSize();
     }
 
@@ -82,7 +83,9 @@ public partial class MainWindow : Window
             BusyText.Text = "Ready";
             BusyProgress.Visibility = Visibility.Hidden;
             HeaderPanel.IsEnabled = true;
-            DistroTabs.IsEnabled = _wslInstalled;
+            // Pages stay usable without WSL: the WSL pages show their own "install WSL"
+            // state, and others (such as SSH) do not need WSL at all.
+            DistroTabs.IsEnabled = true;
             UpdateButtons();
         }
     }

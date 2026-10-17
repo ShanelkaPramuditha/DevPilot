@@ -27,6 +27,19 @@ public static class VsCode
         Process.Start(startInfo);
     }
 
+    /// <summary>Opens a Windows file in VS Code.</summary>
+    public static void OpenFile(string path)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = Launcher.Value ?? throw new InvalidOperationException("VS Code was not found."),
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        startInfo.ArgumentList.Add(path);
+        Process.Start(startInfo);
+    }
+
     /// <summary>
     /// Finds VS Code's command-line launcher (code.cmd) on the PATH.
     /// </summary>

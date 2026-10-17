@@ -905,6 +905,136 @@
                         </ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem x:Name="SshTab" Header="SSH"
+                         nav:PageInfo.Glyph="&#xE8D7;"
+                         nav:PageInfo.Group="Tools"
+                         nav:PageInfo.Subtitle="Hosts in your SSH config. Right-click a host for actions, double-click to connect.">
+                    <DockPanel Margin="0,4,0,0">
+                        <!-- Which config file is managed -->
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="14,10">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="SshOpenFileButton" Content="Open in Editor" Margin="8,0,8,0" Click="SshOpenFile_Click"
+                                            ToolTip="Open the config file in your default text editor"/>
+                                    <Button x:Name="SshDefaultButton" Content="Use Default" Margin="0,0,8,0" Click="SshUseDefault_Click"
+                                            Visibility="Collapsed" ToolTip="Go back to %UserProfile%\.ssh\config"/>
+                                    <Button Content="Change File..." Margin="0" Click="SshChangeFile_Click"
+                                            ToolTip="Manage a different SSH config file"/>
+                                </StackPanel>
+                                <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
+                                           Foreground="{DynamicResource Brush.Accent}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="SshPathText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock x:Name="SshPathHint" Style="{StaticResource HintText}"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Search and add -->
+                        <DockPanel x:Name="SshToolbar" DockPanel.Dock="Top" Margin="0,0,0,8">
+                            <Button
+                                DockPanel.Dock="Right"
+                                Content="Add Host"
+                                Style="{StaticResource AccentButton}"
+                                Margin="8,0,0,0"
+                                Click="SshAddHost_Click"/>
+                            <Grid>
+                                <TextBox
+                                    x:Name="SshSearchBox"
+                                    Padding="6,5"
+                                    VerticalContentAlignment="Center"
+                                    TextChanged="SshSearchBox_TextChanged"/>
+                                <TextBlock
+                                    x:Name="SshSearchHint"
+                                    Text="Search by host, address or user..."
+                                    Foreground="{DynamicResource Brush.TextSecondary}"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    IsHitTestVisible="False"/>
+                            </Grid>
+                        </DockPanel>
+
+                        <TextBlock
+                            x:Name="SshStatusText"
+                            DockPanel.Dock="Bottom"
+                            Margin="0,8,0,0"
+                            Style="{StaticResource HintText}"/>
+
+                        <Grid>
+                            <ListView
+                                x:Name="SshHostList"
+                                SelectionMode="Single"
+                                GridViewColumnHeader.Click="ListHeader_Click"
+                                PreviewMouseRightButtonDown="List_PreviewMouseRightButtonDown"
+                                MouseDoubleClick="SshHostList_MouseDoubleClick">
+                                <ListView.ContextMenu>
+                                    <ContextMenu x:Name="SshMenu" Opened="SshMenu_Opened">
+                                        <MenuItem x:Name="SshConnectItem" Header="_Connect" FontWeight="SemiBold" Click="SshConnect_Click"/>
+                                        <MenuItem x:Name="SshTestItem" Header="_Test Connection" Click="SshTest_Click"
+                                                  ToolTip="Try to log in with your keys, without a password prompt"/>
+                                        <MenuItem x:Name="SshCopyItem" Header="Copy SSH _Command" Click="SshCopyCommand_Click"/>
+                                        <Separator x:Name="SshEditSeparator"/>
+                                        <MenuItem x:Name="SshEditItem" Header="_Edit..." Click="SshEditHost_Click"/>
+                                        <MenuItem x:Name="SshDuplicateItem" Header="D_uplicate..." Click="SshDuplicateHost_Click"/>
+                                        <MenuItem x:Name="SshDeleteItem" Header="_Delete..." Click="SshDeleteHost_Click"/>
+                                        <Separator x:Name="SshGeneralSeparator"/>
+                                        <MenuItem Header="_Add Host..." Click="SshAddHost_Click"/>
+                                        <MenuItem Header="_Reload" Click="SshReload_Click"/>
+                                    </ContextMenu>
+                                </ListView.ContextMenu>
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Width="210" DisplayMemberBinding="{Binding DisplayName}">
+                                            <GridViewColumnHeader Content="Host" Tag="Patterns" ToolTip="The name you connect with (ssh &lt;host&gt;); several names or patterns are allowed"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="160" DisplayMemberBinding="{Binding HostName}">
+                                            <GridViewColumnHeader Content="Address" Tag="HostName" ToolTip="HostName: the real server name or IP address"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="110" DisplayMemberBinding="{Binding User}">
+                                            <GridViewColumnHeader Content="User" Tag="User"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="70" DisplayMemberBinding="{Binding PortText}">
+                                            <GridViewColumnHeader Content="Port" Tag="PortText"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="180" DisplayMemberBinding="{Binding IdentityFile}">
+                                            <GridViewColumnHeader Content="Key file" Tag="IdentityFile" ToolTip="IdentityFile: the private key used to log in"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="130" DisplayMemberBinding="{Binding ProxyJump}">
+                                            <GridViewColumnHeader Content="Jump host" Tag="ProxyJump" ToolTip="ProxyJump: connect through this host first"/>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="200">
+                                            <GridViewColumnHeader Content="Other options" Tag="OtherOptionsText"/>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding OtherOptionsText}" ToolTip="{Binding OtherOptionsTooltip}"
+                                                               Foreground="{DynamicResource Brush.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+
+                            <!-- No config file, or no hosts -->
+                            <StackPanel
+                                x:Name="SshEmptyPanel"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                MaxWidth="460"
+                                Visibility="Collapsed">
+                                <TextBlock Text="&#xE8D7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="36"
+                                           HorizontalAlignment="Center" Foreground="{DynamicResource Brush.TextMuted}"/>
+                                <TextBlock x:Name="SshEmptyTitle" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,12,0,4"/>
+                                <TextBlock x:Name="SshEmptyText" Style="{StaticResource HintText}" TextAlignment="Center"/>
+                                <StackPanel x:Name="SshMissingActions" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                                    <Button Content="Create Config File" Style="{StaticResource AccentButton}" Margin="0,0,8,0" Click="SshCreateFile_Click"/>
+                                    <Button Content="Choose Existing File..." Margin="0" Click="SshChangeFile_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </DockPanel>
+                </TabItem>
             </TabControl>
 
             <!-- Busy indicator -->

@@ -50,6 +50,12 @@ public partial class MainWindow
         }
 
         SyncNavSelection();
+
+        // Pick up changes made to the SSH config outside DevPilot.
+        if (DistroTabs.SelectedItem == SshTab)
+        {
+            LoadSshConfig();
+        }
         UpdateUsageTimer();
         if (IsUsageTabOpen)
         {

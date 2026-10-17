@@ -30,6 +30,9 @@ public sealed class AppPreferences
     /// <summary>A version the user chose to skip; automatic checks do not offer it again.</summary>
     public string? SkippedVersion { get; set; }
 
+    /// <summary>SSH config file chosen by the user; null means the default %UserProfile%\.ssh\config.</summary>
+    public string? SshConfigPath { get; set; }
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
