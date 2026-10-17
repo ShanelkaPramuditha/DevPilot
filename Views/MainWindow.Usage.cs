@@ -66,6 +66,11 @@ public partial class MainWindow
         {
             await LoadKeysAsync();
         }
+
+        if (DistroTabs.SelectedItem == RemoteTab)
+        {
+            await OnRemotePageOpenedAsync();
+        }
         UpdateUsageTimer();
         if (IsUsageTabOpen)
         {

@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         InitializeSidebar();
         InitializeSsh();
         InitializeTools();
+        InitializeRemote();
         InitializeTray();
         RestoreWindowSize();
     }
@@ -48,6 +49,7 @@ public partial class MainWindow : Window
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         await RunBusyAsync("Checking WSL...", RefreshAllAsync);
+        await StartKeptRunningDistrosAsync();
         await CheckForUpdatesInBackgroundAsync();
     }
 

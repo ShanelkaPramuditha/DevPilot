@@ -919,6 +919,133 @@
                         </ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem x:Name="RemoteTab" Header="Remote Access"
+                         nav:PageInfo.Glyph="&#xE774;"
+                         nav:PageInfo.Group="WSL"
+                         nav:PageInfo.Subtitle="Reach a distribution from other computers, on your network or from anywhere.">
+                    <DockPanel Margin="0,4,0,0">
+                        <!-- Which distribution -->
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="14,10">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button x:Name="RemoteRefreshButton" DockPanel.Dock="Right" Content="Refresh" Margin="8,0,0,0" Click="RemoteRefresh_Click"/>
+                                    <TextBlock Text="Distribution" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <ComboBox x:Name="RemoteDistroBox" Width="240" VerticalAlignment="Center" SelectionChanged="RemoteDistro_Changed"/>
+                                    <CheckBox x:Name="RemoteKeepRunningBox" Content="Keep it running for remote access" VerticalAlignment="Center" Margin="16,0,0,0"
+                                              Checked="RemoteKeepRunning_Changed" Unchecked="RemoteKeepRunning_Changed"
+                                              ToolTip="WSL stops idle distributions. DevPilot keeps this one running, also after DevPilot starts with Windows."/>
+                                </DockPanel>
+                                <DockPanel Margin="0,8,0,0">
+                                    <CheckBox x:Name="RemoteKeepAwakeBox" Content="Keep this PC awake while someone is connected" VerticalAlignment="Center"
+                                              Checked="RemoteKeepAwake_Changed" Unchecked="RemoteKeepAwake_Changed"
+                                              ToolTip="While an SSH or Tailscale SSH session is open to a running distribution, Windows does not go to sleep on its idle timer. The screen can still turn off; closing the lid still sleeps. Checked every 30 seconds, also when DevPilot is in the notification area."/>
+                                    <Ellipse x:Name="RemoteAwakeDot" Width="8" Height="8" Margin="16,0,6,0" VerticalAlignment="Center" Fill="{DynamicResource Brush.TextMuted}"/>
+                                    <TextBlock x:Name="RemoteAwakeText" Style="{StaticResource HintText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Output of the running (or last) step -->
+                        <Border x:Name="RemoteOutputPanel" DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="14,10" Visibility="Collapsed">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                                    <Button x:Name="RemoteHideOutputButton" DockPanel.Dock="Right" Content="Hide" Margin="8,0,0,0" Click="RemoteHideOutput_Click"/>
+                                    <ProgressBar x:Name="RemoteProgress" DockPanel.Dock="Left" Width="90" Height="6" IsIndeterminate="True" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="RemoteOperationText" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                                <TextBox x:Name="RemoteOutputBox" Height="110" IsReadOnly="True" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                         TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+                            </DockPanel>
+                        </Border>
+
+                        <ScrollViewer x:Name="RemoteScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="RemoteSteps" Margin="0,0,8,0">
+                                <!-- Step 1: SSH server -->
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                                <Button x:Name="RemoteKeysButton" Content="Allow My SSH Keys" Margin="0,0,8,0" Click="RemoteAuthorizeKeys_Click"
+                                                        ToolTip="Let the public keys on this PC (SSH Keys page) log in to the distribution without a password"/>
+                                                <Button x:Name="RemoteSshButton" Content="Set Up SSH Server" Style="{StaticResource AccentButton}" Click="RemoteSetUpSsh_Click"/>
+                                            </StackPanel>
+                                            <TextBlock Text="1. SSH server in the distribution" Style="{StaticResource CardTitle}"/>
+                                        </DockPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse x:Name="RemoteSshDot" Width="10" Height="10" Margin="0,0,8,0" Fill="{DynamicResource Brush.TextMuted}"/>
+                                            <TextBlock x:Name="RemoteSshText" FontWeight="SemiBold" Text="Checking..."/>
+                                        </StackPanel>
+                                        <TextBlock Style="{StaticResource HintText}" Margin="0,6,0,0"
+                                                   Text="Other computers connect to the distribution with SSH. Sign in with your Linux user's password, or allow your SSH keys for password-free logins."/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Step 2: same network -->
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                                <Button x:Name="RemoteLanRemoveButton" Content="Remove" Margin="0,0,8,0" Click="RemoteLanRemove_Click"
+                                                        ToolTip="Remove DevPilot's port forward and firewall rules (asks for admin rights)"/>
+                                                <Button x:Name="RemoteLanButton" Content="Allow from My Network" Style="{StaticResource AccentButton}" Click="RemoteLanAllow_Click"
+                                                        ToolTip="Add a port forward and firewall rules so other computers on your network can connect (asks for admin rights)"/>
+                                            </StackPanel>
+                                            <TextBlock Text="2. Computers on the same network" Style="{StaticResource CardTitle}"/>
+                                        </DockPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse x:Name="RemoteLanDot" Width="10" Height="10" Margin="0,0,8,0" Fill="{DynamicResource Brush.TextMuted}"/>
+                                            <TextBlock x:Name="RemoteLanText" FontWeight="SemiBold" Text="Checking..."/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="RemoteLanHint" Style="{StaticResource HintText}" Margin="0,6,0,8"/>
+                                        <Border x:Name="RemotePublicNetworkNote" Margin="0,0,0,8" Padding="10,8" CornerRadius="4" Visibility="Collapsed"
+                                                Background="{DynamicResource Brush.NoteBackground}" BorderBrush="{DynamicResource Brush.Warning}" BorderThickness="1">
+                                            <DockPanel>
+                                                <Button x:Name="RemoteMakePrivateButton" DockPanel.Dock="Right" Content="Make Private" Margin="12,0,0,0" VerticalAlignment="Center"
+                                                        Click="RemoteMakePrivate_Click" ToolTip="Treat this network as a private (trusted) network (asks for admin rights)"/>
+                                                <TextBlock x:Name="RemotePublicNetworkText" TextWrapping="Wrap" Foreground="{DynamicResource Brush.TextSecondary}" VerticalAlignment="Center"/>
+                                            </DockPanel>
+                                        </Border>
+                                        <ItemsControl x:Name="RemoteLanCommands">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <Button DockPanel.Dock="Right" Content="Copy" Tag="{Binding Command}" Padding="12,3" MinWidth="0" Margin="8,0,0,0" Click="RemoteCopyCommand_Click"/>
+                                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Label}" Style="{StaticResource HintText}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                                        <TextBox Text="{Binding Command, Mode=OneWay}" IsReadOnly="True" FontFamily="Cascadia Mono, Consolas" Padding="6,4"/>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Step 3: other networks -->
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <Button x:Name="RemoteTailscaleButton" DockPanel.Dock="Right" Content="Set Up Tailscale" Style="{StaticResource AccentButton}"
+                                                    VerticalAlignment="Top" Click="RemoteSetUpTailscale_Click"
+                                                    ToolTip="Install Tailscale in the distribution and sign in (opens a terminal window)"/>
+                                            <TextBlock Text="3. Computers on other networks (from anywhere)" Style="{StaticResource CardTitle}"/>
+                                        </DockPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse x:Name="RemoteTsDot" Width="10" Height="10" Margin="0,0,8,0" Fill="{DynamicResource Brush.TextMuted}"/>
+                                            <TextBlock x:Name="RemoteTsText" FontWeight="SemiBold" Text="Checking..."/>
+                                        </StackPanel>
+                                        <TextBlock Style="{StaticResource HintText}" Margin="0,6,0,8"
+                                                   Text="Tailscale connects your devices into a private network over the internet, without opening ports on your router. Install Tailscale on the other computer and sign in with the same account; Tailscale SSH then lets you log in with no keys or passwords to manage."/>
+                                        <ItemsControl x:Name="RemoteTsCommands" ItemTemplate="{Binding ItemTemplate, ElementName=RemoteLanCommands}"/>
+                                        <Border Margin="0,6,0,0" Padding="10,8" CornerRadius="4" Background="{DynamicResource Brush.NoteBackground}"
+                                                BorderBrush="{DynamicResource Brush.NoteStroke}" BorderThickness="1">
+                                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Brush.TextSecondary}"
+                                                       Text="Why not forward a port on your router? An SSH server open to the whole internet is attacked constantly. Tailscale (or a VPN to your home network) keeps it reachable only by your own devices."/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </TabItem>
                 <TabItem x:Name="ToolsTab" Header="Dev Tools"
                          nav:PageInfo.Glyph="&#xE90F;"
                          nav:PageInfo.Group="Tools"
@@ -1028,7 +1155,19 @@
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Button Content="{Binding ActionText}" Tag="{Binding}" MinWidth="150" Padding="12,4" Margin="0"
-                                                            IsEnabled="{Binding CanAct}" ToolTip="{Binding Tooltip}" Click="ToolAction_Click"/>
+                                                            ToolTip="{Binding Tooltip}" ToolTipService.ShowOnDisabled="True" Click="ToolAction_Click">
+                                                        <Button.Style>
+                                                            <!-- Disabled while another install or update runs (MainWindow.SetToolOperationRunning) -->
+                                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                                <Setter Property="IsEnabled" Value="{Binding CanAct}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ListView}}" Value="busy">
+                                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>

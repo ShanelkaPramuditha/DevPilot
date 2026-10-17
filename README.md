@@ -9,6 +9,9 @@ DevPilot is a Windows desktop app (WPF, .NET 10) for developers who work with WS
 - **Dev tools:** install and update Git, Docker, Node.js, Python, .NET, Go, Rust, Java and more, on Windows
   (winget) or inside a distribution (apt, dnf, pacman, zypper).
 - **SSH:** manage hosts in your SSH config, connect and test connections; generate and manage SSH keys and ssh-agent.
+- **Remote access:** reach a distribution from other computers over SSH: on the same network (Windows port
+  forward and firewall rules) or from anywhere with Tailscale, without opening ports on your router;
+  optionally keeps the PC awake while someone is connected.
 - **Everyday use:** command palette (Ctrl+K), notification-area icon with quick distribution actions,
   start with Windows, light and dark theme, in-app updates.
 
@@ -59,6 +62,7 @@ Models/                      Data shown in the UI: distributions, catalog entrie
 Services/
   Wsl/                       Everything that talks to wsl.exe or reads WSL data
   Platform/                  Windows-side helpers (system memory, VS Code)
+  Remote/                    Remote access: SSH server and Tailscale in a distribution, Windows port forward and firewall
   AppPreferences.cs          Preferences saved in %LocalAppData%\DevPilot
 Theming/                     Light/dark theme and the app's colour palette
 Navigation/                  Sidebar: PageInfo attached properties and NavItem

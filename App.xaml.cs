@@ -62,6 +62,7 @@ public partial class App : Application
         {
             // Started with Windows: stay in the notification area until opened,
             // but still look for updates (a notification appears if there is one).
+            _ = Views.MainWindow.StartKeptRunningDistrosAsync();
             _ = window.CheckForUpdatesWhileHiddenAsync();
             return;
         }

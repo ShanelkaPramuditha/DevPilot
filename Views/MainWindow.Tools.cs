@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using DevPilot.Controls;
 using DevPilot.Models;
 using DevPilot.Navigation;
 using DevPilot.Services.Platform;
@@ -18,11 +19,8 @@ public partial class MainWindow
     /// <summary>The target "Windows"; other targets are distribution names.</summary>
     private const string WindowsTarget = "";
 
-    /// <summary>Output lines kept in the panel; older lines are dropped.</summary>
-    private const int MaxOutputLines = 2000;
-
     private readonly ObservableCollection<ToolRow> _toolRows = [];
-    private readonly List<string> _toolOutput = [];
+    private OutputLog _toolOutput = null!;
     private DistroToolInfo? _toolDistroInfo;
     private Action? _cancelToolOperation;
     private bool _toolsLoaded;
@@ -39,6 +37,7 @@ public partial class MainWindow
     private void InitializeTools()
     {
         ToolList.ItemsSource = _toolRows;
+        _toolOutput = new OutputLog(ToolOutputBox);
         UpdateToolTargets();
     }
 
@@ -157,6 +156,17 @@ public partial class MainWindow
         ToolList.IsEnabled = enabled;
     }
 
+    /// <summary>
+    /// While an install runs, the list stays scrollable and selectable (to read about other
+    /// tools); only the action buttons are disabled, through the "busy" tag the row button style reads.
+    /// </summary>
+    private void SetToolOperationRunning(bool running)
+    {
+        ToolTargetBox.IsEnabled = !running;
+        ToolsRefreshButton.IsEnabled = !running;
+        ToolList.Tag = running ? "busy" : null;
+    }
+
     #region Actions
 
     private async void ToolAction_Click(object sender, RoutedEventArgs e)
@@ -208,12 +218,14 @@ public partial class MainWindow
             return;
         }
 
+        // While an operation runs the list stays usable, but only one operation runs at a time.
+        bool idle = _cancelToolOperation is null;
         ToolInstallItem.Visibility = row.Installed ? Visibility.Collapsed : Visibility.Visible;
-        ToolInstallItem.IsEnabled = row.CanAct;
+        ToolInstallItem.IsEnabled = idle && row.CanAct;
         ToolUpdateItem.Visibility = row.Installed ? Visibility.Visible : Visibility.Collapsed;
-        ToolUpdateItem.IsEnabled = row.CanUpdate;
+        ToolUpdateItem.IsEnabled = idle && row.CanUpdate;
         ToolUpdateItem.Header = row.UpdateVersion is { } version ? $"_Update to {version}" : "_Update";
-        ToolUninstallItem.IsEnabled = row.CanUninstall;
+        ToolUninstallItem.IsEnabled = idle && row.CanUninstall;
     }
 
     private void ToolCancel_Click(object sender, RoutedEventArgs e) => _cancelToolOperation?.Invoke();
@@ -240,7 +252,7 @@ public partial class MainWindow
 
         using var cancellation = new CancellationTokenSource();
         _cancelToolOperation = cancellation.Cancel;
-        SetToolControlsEnabled(false);
+        SetToolOperationRunning(true);
 
         try
         {
@@ -297,11 +309,12 @@ public partial class MainWindow
         finally
         {
             _cancelToolOperation = null;
+            _toolOutput.Flush();
             NotifyIfInBackground(row.Name, ToolOperationText.Text);
             ToolProgress.Visibility = Visibility.Collapsed;
             ToolCancelButton.Visibility = Visibility.Collapsed;
             ToolHideOutputButton.Visibility = Visibility.Visible;
-            SetToolControlsEnabled(true);
+            SetToolOperationRunning(false);
         }
 
         await RefreshToolsAsync();
@@ -324,7 +337,6 @@ public partial class MainWindow
     private void StartToolOutput(string title)
     {
         _toolOutput.Clear();
-        ToolOutputBox.Clear();
         ToolOperationText.Text = title;
         ToolProgress.Visibility = Visibility.Visible;
         ToolCancelButton.Visibility = Visibility.Visible;
@@ -333,27 +345,7 @@ public partial class MainWindow
     }
 
     /// <summary>Adds a line to the output panel (callable from any thread).</summary>
-    private void AppendToolOutput(string line)
-    {
-        if (!Dispatcher.CheckAccess())
-        {
-            Dispatcher.BeginInvoke(() => AppendToolOutput(line));
-            return;
-        }
-
-        _toolOutput.Add(line);
-        if (_toolOutput.Count > MaxOutputLines)
-        {
-            _toolOutput.RemoveRange(0, _toolOutput.Count - MaxOutputLines);
-            ToolOutputBox.Text = string.Join(Environment.NewLine, _toolOutput) + Environment.NewLine;
-        }
-        else
-        {
-            ToolOutputBox.AppendText(line + Environment.NewLine);
-        }
-
-        ToolOutputBox.ScrollToEnd();
-    }
+    private void AppendToolOutput(string line) => _toolOutput.Append(line);
 
     #endregion
 }

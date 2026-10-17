@@ -22,6 +22,12 @@ public sealed class AppPreferences
     /// <summary>Closing the window keeps DevPilot running in the notification area.</summary>
     public bool CloseToTray { get; set; }
 
+    /// <summary>Distributions DevPilot keeps running for remote access (also after starting with Windows).</summary>
+    public List<string> RemoteKeepRunning { get; set; } = [];
+
+    /// <summary>Keep Windows from sleeping while someone is connected to a distribution over SSH.</summary>
+    public bool RemoteKeepAwake { get; set; }
+
     /// <summary>Check GitHub for a newer version when DevPilot starts (at most every few hours).</summary>
     public bool CheckForUpdatesAutomatically { get; set; } = true;
 
